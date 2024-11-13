@@ -11,9 +11,10 @@ spec:
   http:
   - match:
     - uri:
-        exact: /api/accounts/v1/accounts
+        exact: /api/v1/accounts 
     route:
     - destination:
         host: accounts-ms-base.accounts.svc.cluster.local  
         port:
-          number: 80            
+          number: 80  
+          
