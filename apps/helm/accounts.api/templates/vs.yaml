@@ -1,8 +1,8 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: accounts
-  namespace: default  # The namespace where the VirtualService is defined
+  name: account
+  namespace: accounts  # The namespace where the VirtualService is defined
 spec:
   hosts:
   - "*"  # Allows access from any host
