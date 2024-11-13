@@ -1,20 +1,21 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
+  labels:
+    app.kubernetes.io/instance: accounts
   name: accounts
-  namespace: accounts  # The namespace where the VirtualService is defined
+  namespace: accounts
 spec:
-  hosts:
-  - "*"  # Allows access from any host
   gateways:
-  - istio-system/banking  # Reference the gateway in the istio-system namespace
+    - istio-system/banking
+  hosts:
+    - '*'
   http:
-  - match:
-    - uri:
-        prefix: /api/accounts 
-    route:
-    - destination:
-        host: accounts-ms-base.accounts.svc.cluster.local  
-        port:
-          number: 80  
-          
+    - match:
+        - uri:
+            exact: /api/v1/accounts
+      route:
+        - destination:
+            host: accounts-ms-base.accounts.svc.cluster.local
+            port:
+              number: 80

@@ -7,14 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Accounts.API.Controllers
 {
-    // [ApiVersion("1.0")]
-    // [Route("api/[controller]/v{v:apiVersion}")]
-    // [ApiController]
-
-    [ApiVersion( "1.0" )]
-    [ApiVersion( "2.0" )]
+    [ApiVersion("1.0")]
+    [Route("api/v{v:apiVersion}")]
     [ApiController]
-    [Route("api/[controller]/v{v:apiVersion}")]   
     public class AccountsController : ControllerBase
     {
         [HttpGet("accounts")]
@@ -36,26 +31,6 @@ namespace Accounts.API.Controllers
             });
         }
 
-        [MapToApiVersion( "2.0" )]
-        [HttpGet("accounts")]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(Error[]), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(Error[]), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(Error[]), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAccountV2([FromQuery] string accountNumber)
-        {
-            return Ok(new Account
-            {
-                AccountNumber = accountNumber,
-                AccountType = "Loan V2",
-                CIF = "1",
-                Balance = 10,
-                BranchCode = "9142"
-            });
-        }        
-
         [HttpPost("accounts")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
@@ -68,6 +43,4 @@ namespace Accounts.API.Controllers
             return Created($"accounts/{Guid.NewGuid()}", null);
         }
     }
-
-
 }
