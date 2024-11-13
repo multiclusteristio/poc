@@ -13,6 +13,6 @@ spec:
         exact: /api/v1/accounts
     route:
     - destination:
-        host: helm-accounts-ms-base
+        host: accounts-ms-base
         port:
           number: 80                   
