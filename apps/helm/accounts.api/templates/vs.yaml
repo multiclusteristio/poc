@@ -10,9 +10,8 @@ spec:
   - istio-system/banking  # Reference the gateway in the istio-system namespace
   http:
   - match:
-
     - uri:
-        exact: /api/accounts/v1
+        prefix: /api/accounts/v1
     route:
     - destination:
         host: accounts-ms-base.accounts.svc.cluster.local  
