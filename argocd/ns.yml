@@ -1,7 +1,15 @@
-# namespace.yaml
+---
 apiVersion: v1
 kind: Namespace
 metadata:
   name: accounts 
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: transfers 
   annotations:
     argocd.argoproj.io/sync-wave: "0"
