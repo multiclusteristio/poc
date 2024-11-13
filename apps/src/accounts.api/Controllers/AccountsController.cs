@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Accounts.API.Controllers
 {
     [ApiVersion("1.0")]
-    [Route("api/v{v:apiVersion}")]
+    [Route("api/[controller]/v{v:apiVersion}")]
     [ApiController]
     public class AccountsController : ControllerBase
     {
