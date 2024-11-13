@@ -7,12 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Accounts.API.Controllers
 {
-    [Route("api/accounts")]
+    [ApiVersion("1.0")]
+    [Route("api/v{v:apiVersion}")]
     [ApiController]
     public class AccountsController : ControllerBase
     {
         // Version 1.0 - Get Account
-        [HttpGet("v1/accounts")]
+        [HttpGet("accounts")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
@@ -43,16 +44,23 @@ namespace Accounts.API.Controllers
         {
             return Created($"accounts/{Guid.NewGuid()}", null);
         }
+    }
 
-        // Version 2.0 - Get Account
-        [HttpGet("v2/accounts")]
+
+    [ApiVersion("2.0")]
+    [Route("api/v{v:apiVersion}")]
+    [ApiController]
+    public class AccountsControllerV2 : ControllerBase
+    {
+        // Version 1.0 - Get Account
+        [HttpGet("accounts")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(Error[]), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error[]), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(Error[]), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAccountV2([FromQuery] string accountNumber)
+        public async Task<IActionResult> GetAccount([FromQuery] string accountNumber)
         {
             return Ok(new Account
             {

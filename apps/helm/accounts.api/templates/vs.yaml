@@ -1,17 +1,19 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: accounts
+  name: account
   namespace: accounts
 spec:
   hosts:
-  - "*"
+  - "*" 
   gateways:
-  - istio-system/banking 
+  - istio-system/banking
   http:
   - match:
     - uri:
-        prefix: /api/accounts  # Prefix match to allow URIs that start with /api/accounts
+        exact: /api/v1/accounts
     route:
     - destination:
-        host: accounts-ms-base.accounts.svc.cluster.local
+        host: accounts-ms-base.accounts.svc.cluster.local 
+        port:
+          number: 80
