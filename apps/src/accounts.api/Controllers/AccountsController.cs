@@ -8,12 +8,12 @@ using Microsoft.AspNetCore.Mvc;
 namespace Accounts.API.Controllers
 {
     [ApiVersion("1.0")]
-    [Route("api/v{v:apiVersion}")]
+    [Route("api/[controller]/v{v:apiVersion}")]
     [ApiController]
     public class AccountsController : ControllerBase
     {
         // Version 1.0 - Get Account
-        [HttpGet("accounts")]
+        [HttpGet]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
@@ -33,7 +33,7 @@ namespace Accounts.API.Controllers
         }
 
         // Version 1.0 - Create Account
-        [HttpPost("v1/accounts")]
+        [HttpPost]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -48,12 +48,11 @@ namespace Accounts.API.Controllers
 
 
     [ApiVersion("2.0")]
-    [Route("api/v{v:apiVersion}")]
+    [Route("api/[controller]/v{v:apiVersion}")]
     [ApiController]
     public class AccountsControllerV2 : ControllerBase
     {
-        // Version 1.0 - Get Account
-        [HttpGet("accounts")]
+        [HttpGet]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
