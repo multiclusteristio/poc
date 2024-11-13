@@ -8,12 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace Accounts.API.Controllers
 {
     [ApiVersion("1.0")]
-    [Route("api/[controller]/v{version:apiVersion}")]
+    [Route("api/accounts/v{version:apiVersion}")]
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        // Version 1.0 - Get Account
-        [HttpGet]
+        [HttpGet("accounts")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
@@ -25,15 +24,14 @@ namespace Accounts.API.Controllers
             return Ok(new Account
             {
                 AccountNumber = accountNumber,
-                AccountType = "Loan V1",
+                AccountType = "Loan",
                 CIF = "1",
                 Balance = 10,
                 BranchCode = "9142"
             });
         }
 
-        // Version 1.0 - Create Account
-        [HttpPost]
+        [HttpPost("accounts")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(StatusCodes.Status201Created)]
@@ -46,14 +44,12 @@ namespace Accounts.API.Controllers
         }
     }
 
-
     [ApiVersion("2.0")]
-    [Route("api/[controller]/v{version:apiVersion}")]
+    [Route("api/accounts/v{v:apiVersion}")]
     [ApiController]
     public class AccountsControllerV2 : ControllerBase
     {
-        // Version 1.0 - Get Account
-        [HttpGet]
+        [HttpGet("accounts")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
         [ProducesResponseType(typeof(Account), StatusCodes.Status200OK)]
