@@ -1,1 +1,1 @@
-sh build_and_push.sh account v2
+sh build_and_push.sh account v2.1

@@ -3,7 +3,7 @@ clusterName: sh2-cluster
 global:
   image:
     repository: kadirzade/mci-account
-    tag: v2
+    tag: v2.1
     pullPolicy: Always
 
   service:
