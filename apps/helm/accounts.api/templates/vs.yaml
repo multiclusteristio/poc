@@ -19,3 +19,14 @@ spec:
             host: accounts-ms-base.accounts.svc.cluster.local
             port:
               number: 80
+
+    - match:
+        - uri:
+            exact: /api/v2/accounts
+      route:
+        - destination:
+            host: accounts-ms-base.accounts.svc.cluster.local
+            port:
+              number: 80              
+
+              
