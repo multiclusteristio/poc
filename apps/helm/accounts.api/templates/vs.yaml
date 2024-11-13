@@ -14,6 +14,6 @@ spec:
         exact: /api/v1/accounts  # Matches requests with this exact path
     route:
     - destination:
-        host: accounts-ms-base  # The service to route to
+        host: accounts-ms-base.accounts  # The service to route to
         port:
           number: 80  # The port of the destination service
