@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: accounts
+  namespace: default  # You can change this to the appropriate namespace
+spec:
+  hosts:
+  - "*"  # Allows access from any host
+  gateways:
+  - banking  # The name of the gateway
+  http:
+  - match:
+    - uri:
+        exact: /api/v1/accounts  # Matches requests with this exact path
+    route:
+    - destination:
+        host: accounts-ms-base  # The service to route to
+        port:
+          number: 80  # The port of the destination service
