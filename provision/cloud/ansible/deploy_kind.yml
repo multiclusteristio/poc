@@ -1,0 +1,30 @@
+- name: Deploy KIND on EC2 instances
+  hosts: kind_hosts
+  become: true
+  tasks:
+    - name: Install dependencies
+      apt:
+        name:
+          - docker.io
+          - curl
+        state: present
+        update_cache: true
+
+    - name: Add ubuntu user to the Docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+
+    - name: Download KIND binary
+      get_url:
+        url: https://kind.sigs.k8s.io/dl/v0.11.1/kind-linux-amd64
+        dest: /usr/local/bin/kind
+        mode: '0755'
+
+    - name: Create KIND cluster
+      shell: kind create cluster --name my-cluster
+      environment:
+        KUBECONFIG: "/root/.kube/config"
+      args:
+        creates: "/root/.kube/config"

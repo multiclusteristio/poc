@@ -1,0 +1,25 @@
+- name: Deploy ArgoCD on KIND cluster
+  hosts: kind_hosts
+  become: true
+  tasks:
+    - name: Install kubectl
+      get_url:
+        url: https://dl.k8s.io/release/v1.22.0/bin/linux/amd64/kubectl
+        dest: /usr/local/bin/kubectl
+        mode: '0755'
+
+    - name: Create ArgoCD namespace
+      command: "kubectl create namespace argocd"
+      environment:
+        KUBECONFIG: "/root/.kube/config"
+      ignore_errors: yes
+
+    - name: Deploy ArgoCD
+      command: "kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
+      environment:
+        KUBECONFIG: "/root/.kube/config"
+
+    - name: Wait for ArgoCD pods to be running
+      command: "kubectl wait --for=condition=available --timeout=600s -n argocd deployment/argocd-server"
+      environment:
+        KUBECONFIG: "/root/.kube/config"

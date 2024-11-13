@@ -1,0 +1,44 @@
+
+---
+- name: Check if Kind is installed
+  stat:
+    path: /usr/local/bin/kind
+  register: kind_binary
+
+- name: Install Kind
+  get_url:
+    url: https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64
+    dest: /usr/local/bin/kind
+    mode: '0755'
+  when:
+    - ansible_facts['os_family'] == "Debian"
+    - not kind_binary.stat.exists 
+
+- name: Check if kubectl is installed
+  stat:
+    path: /usr/local/bin/kubectl
+  register: kubectl_binary    
+      
+- name: Install kubectl
+  get_url:
+    url: https://storage.googleapis.com/kubernetes-release/release/v1.20.0/bin/linux/amd64/kubectl
+    dest: /usr/local/bin/kubectl
+    mode: '0755'
+  when:
+    - ansible_facts['os_family'] == "Debian"
+    - not kubectl_binary.stat.exists
+
+- name: Check if Kind cluster exists
+  command: kind get clusters
+  register: kind_clusters
+  changed_when: false
+
+- name: Create Kind config file
+  template:
+    src: kind-config.yaml.j2
+    dest: /tmp/kind-config.yaml     
+  when: inventory_hostname not in kind_clusters.stdout           
+- name: Create Kind cluster if it does not exist
+  command: kind create cluster --name {{ inventory_hostname }} --config=/tmp/kind-config.yaml
+  when: inventory_hostname not in kind_clusters.stdout
+

@@ -1,0 +1,44 @@
+
+---
+
+- name: Add Helm repository for cert-manager
+  command:
+    cmd: helm repo add jetstack https://charts.jetstack.io
+  register: helm_repo_add
+  failed_when: "'Error' in helm_repo_add.stderr"
+  changed_when: "'Error' not in helm_repo_add.stderr"
+
+- name: Update Helm repositories
+  command:
+    cmd: helm repo update
+  register: helm_repo_update
+  failed_when: "'Error' in helm_repo_update.stderr"
+  changed_when: "'Error' not in helm_repo_update.stderr"
+
+- name: Check if cert-manager is already installed
+  command: "helm status cert-manager -n cert-manager"
+  register: helm_release_check
+  failed_when: helm_release_check.rc not in [0, 1]
+  changed_when: false
+
+- name: Install cert-manager using Helm if not already installed
+  command: >
+    helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace \
+    --set crds.enabled=true \
+    --set global.logLevel=6 \
+    --version v1.16.0 \
+    --wait \
+    --timeout 600s
+  when: helm_release_check.rc != 0
+  register: helm_install
+  failed_when: helm_install.rc != 0
+  changed_when: helm_install.rc == 0
+
+- name: Ensure cert-manager is deployed and healthy
+  command:
+    cmd: helm status cert-manager --namespace cert-manager
+  register: helm_status
+  retries: 10
+  delay: 30
+  until: "'STATUS: deployed' in helm_status.stdout"
+

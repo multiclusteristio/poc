@@ -1,0 +1,1 @@
+sh build_and_push.sh account v1

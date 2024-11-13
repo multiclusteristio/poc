@@ -1,0 +1,127 @@
+
+- name: Create the Vault namespace
+  command: kubectl create namespace vault --context kind-{{ inventory_hostname }}
+  ignore_errors: true  # Ignore error if namespace already exists    
+
+- name: Check if Vault pod is already running
+  command: kubectl --context kind-{{ inventory_hostname }} get pods vault-0 -n vault --no-headers
+  register: vault_pod_status
+  ignore_errors: true      
+
+- name: Install Vault using Helm (with dev mode and HA disabled, NodePort service)
+  command: >
+    helm install vault hashicorp/vault --namespace vault \
+    --set server.ha.enabled=false \
+    --set server.dev.enabled=true \
+    --set server.dataStorage.enabled=false \
+    --set server.service.type=NodePort \
+    --set "server.service.nodePort={{ vault_node_port }}" \
+    --set ingress.enabled=false \
+    --set "server.dev.rootToken={{ vault_root_token }}"
+  when: vault_pod_status.rc != 0     
+
+- name: Wait for pod to be running
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} get pods vault-0 -n vault -o jsonpath='{.status.phase}'
+  register: pod_status
+  until: pod_status.stdout == "Running"
+  retries: 30  # Maximum retries
+  delay: 5  # Delay between retries (in seconds)
+  failed_when: pod_status.stdout != "Running"  # Fail if the pod is not running after retries
+
+- name: Print Vault Pod status
+  debug:
+    var: pod_status.stdout 
+
+- name: Enable PKI secrets engine
+  command: kubectl --context kind-{{ inventory_hostname }} exec -n vault -it vault-0 -- vault secrets enable pki
+  ignore_errors: true   
+
+- name: Configure PKI secrets engine with CA certificate
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} exec -n vault -it vault-0 -- vault write pki/root/generate/internal \
+      common_name="mydomain.com" \
+      ttl="8760h"
+
+- name: Configure PKI secrets engine to issue certificates
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} exec -n vault -it vault-0 -- vault write pki/config/urls \ 
+    issuing_certificates="http://vault.vault.svc.cluster.local:8200/v1/pki/ca" \
+    crl_distribution_points="http://vault.vault.svc.cluster.local:8200/v1/pki/crl" 
+
+- name: Configure a role for certificate issuance
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} exec -n vault -it vault-0 -- vault write pki/roles/istio-ca-{{ inventory_hostname }} \
+      allowed_domains=istio-ca \
+      allow_any_name=true  \
+      enforce_hostnames=false \
+      require_cn=false \
+      allowed_uri_sans="spiffe://*" \
+      max_ttl=72h
+
+- name: Create istio system ns
+  command: >
+    kubectl --context kind-{{ inventory_hostname }} apply -f ./istio/istio-ns.yaml 
+  ignore_errors: true
+
+- name: Create istio cert issuer resources for vault access
+  command: >
+    kubectl --context kind-{{ inventory_hostname }} apply -f ./istio/issuer-sa.yaml \
+    -f ./istio/issuer-sa-token.yaml \
+    -f ./istio/issuer-crb.yaml
+  ignore_errors: true            
+      
+- name: Enable Kubernetes auth method in Vault
+  shell: kubectl --context kind-{{ inventory_hostname }} exec -n vault -it vault-0 -- vault auth enable --path={{ inventory_hostname }} kubernetes 
+  ignore_errors: true      
+# - name: Get Kubernetes API server host from the cluster
+#   shell: |
+#     kubectl --context kind-{{ inventory_hostname }} config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.server}'
+#   register: k8s_host 
+
+- name: Get Kubernetes CA certificate from the cluster
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode
+  register: k8s_ca      
+
+- name: Get Service Account token for istio cert issuer
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} get secret issuer-token-lmzpj -n istio-system -o jsonpath='{.data.token}' | base64 --decode
+  register: sa_token    
+
+- name: Configure Kubernetes auth method for east cluster
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} exec -n vault -it vault-0 -- vault write auth/{{ inventory_hostname }}/config \
+      token_reviewer_jwt="{{ sa_token.stdout }}" \
+      kubernetes_host="https://kubernetes.default.svc" \
+      kubernetes_ca_cert="{{ k8s_ca.stdout }}" \
+      issuer="https://kubernetes.default.svc.cluster.local"
+  when: inventory_hostname == 'east'           
+      
+- name: Create pki policy
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} exec -n vault -it vault-0 -- vault policy write pki - <<EOF
+    path "pki*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }
+    EOF
+  ignore_errors: true    
+
+- name: Create Vault role for istio
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} exec -n vault -it vault-0 -- vault write auth/{{ inventory_hostname }}/role/issuer \
+      bound_service_account_names=issuer \
+      bound_service_account_namespaces=istio-system \
+      policies=pki
+      ttl=1h    
+
+- name: Print sa_token
+  debug:
+    var: sa_token.stdout  
+- name: Print k8s_host
+  debug:
+    var: k8s_host.stdout 
+- name: Print k8s_ca
+  debug:
+    var: k8s_ca.stdout  
+

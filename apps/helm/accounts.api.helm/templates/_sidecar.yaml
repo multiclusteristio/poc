@@ -1,0 +1,14 @@
+# Allow transfer api to call customers and accounts api
+apiVersion: networking.istio.io/v1beta1
+kind: Sidecar
+metadata:
+  name: transfers
+  namespace: banking
+spec:
+  workloadSelector:
+    labels:
+      app.kubernetes.io/instance: transfers
+      app.kubernetes.io/name: apis-common
+  egress:
+  - hosts:
+    - "./helm-limits-ms-base.banking.svc.cluster.local"

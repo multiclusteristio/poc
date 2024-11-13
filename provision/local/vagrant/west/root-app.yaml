@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app
+  namespace: argocd  # The namespace where ArgoCD is installed
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/multiclusteristio/argocdapps.git
+    targetRevision: main  # Replace with the branch or tag to use
+    path: west  # Path in the repo where child applications are defined
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true 
+      selfHeal: true  
+  sourceType: Directory

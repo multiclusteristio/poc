@@ -1,0 +1,25 @@
+---
+- name: Check if ArgoCD namespace exists
+  command: kubectl --context kind-{{ inventory_hostname }} get namespace argocd --ignore-not-found
+  register: argocd_namespace
+  changed_when: false
+
+- name: Install ArgoCD if not already installed
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} create namespace argocd
+    kubectl --context kind-{{ inventory_hostname }} apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  when: argocd_namespace.stdout == ""
+  args:
+    executable: /bin/bash
+
+- name: Expose ArgoCD server as NodePort if not already exposed
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} -n argocd patch svc argocd-server \
+      -p '{"spec": {"type": "NodePort", "ports": [{"port": 443, "targetPort": 8080, "nodePort": {{ argo_node_port }}}]}}'
+  args:
+    executable: /bin/bash
+  when: argocd_namespace.stdout == "" 
+     
+# - name: Deploy root App of Apps in ArgoCD
+#   command: >
+#     kubectl --context kind-{{ inventory_hostname }} apply -f ./{{ inventory_hostname }}/root-app.yaml
