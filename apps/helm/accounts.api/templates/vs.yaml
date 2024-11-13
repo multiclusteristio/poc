@@ -14,6 +14,6 @@ spec:
         exact: /api/v1/accounts  # Matches requests with this exact path
     route:
     - destination:
-        host: accounts-ms-base.base.accounts.svc.cluster.local  # The service in the 'base.accounts' namespace
+        host: accounts-ms-base.accounts.svc.cluster.local  # The service in the 'base.accounts' namespace
         port:
           number: 80  # The port of the destination service
