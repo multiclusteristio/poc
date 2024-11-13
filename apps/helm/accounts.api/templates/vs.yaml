@@ -1,24 +1,24 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: account
-  namespace: accounts 
+  name: accounts
+  namespace: default  # The namespace where the VirtualService is defined
 spec:
   hosts:
-  - "*" 
+  - "*"  # Allows access from any host
   gateways:
-  - istio-system/banking 
+  - istio-system/banking  # Reference the gateway in the istio-system namespace
   http:
   - match:
     - uri:
         exact: /api/v1/accounts  # Matches requests for /api/v1/accounts
     route:
     - destination:
-        host: accounts-ms-base.accounts.svc.cluster.local  # Fully qualified service name
+        host: accounts-ms-base.base.accounts.svc.cluster.local  # Fully qualified service name
         subset: v1  # Route traffic to the 'v1' subset of the service
         weight: 90  # Send 90% of the traffic to v1
     - destination:
-        host: accounts-ms-base.accounts.svc.cluster.local  # Fully qualified service name
+        host: accounts-ms-base.base.accounts.svc.cluster.local  # Fully qualified service name
         subset: v2  # Route traffic to the 'v2' subset of the service
         weight: 10  # Send 10% of the traffic to v2
 
@@ -27,10 +27,10 @@ spec:
         exact: /api/v2/accounts  # Matches requests for /api/v2/accounts
     route:
     - destination:
-        host: accounts-ms-base.accounts.svc.cluster.local  # Fully qualified service name
+        host: accounts-ms-base.base.accounts.svc.cluster.local  # Fully qualified service name
         subset: v1  # Route traffic to the 'v1' subset of the service
         weight: 90  # Send 90% of the traffic to v1
     - destination:
-        host: accounts-ms-base.accounts.svc.cluster.local  # Fully qualified service name
+        host: accounts-ms-base.base.accounts.svc.cluster.local  # Fully qualified service name
         subset: v2  # Route traffic to the 'v2' subset of the service
         weight: 10  # Send 10% of the traffic to v2
