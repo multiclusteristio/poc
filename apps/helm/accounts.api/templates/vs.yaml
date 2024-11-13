@@ -11,7 +11,7 @@ spec:
   http:
   - match:
     - uri:
-        exact: /accounts
+        prefix: /api/accounts  # Prefix match to allow URIs that start with /api/accounts
     route:
     - destination:
         host: accounts-ms-base.accounts.svc.cluster.local
