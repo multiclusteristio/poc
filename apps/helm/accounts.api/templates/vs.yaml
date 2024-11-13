@@ -2,18 +2,18 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: accounts
-  namespace: istio-system  # You can change this to the appropriate namespace
+  namespace: default  # The namespace where the VirtualService is defined
 spec:
   hosts:
   - "*"  # Allows access from any host
   gateways:
-  - banking  # The name of the gateway
+  - istio-system/banking  # Reference the gateway in the istio-system namespace
   http:
   - match:
     - uri:
         exact: /api/v1/accounts  # Matches requests with this exact path
     route:
     - destination:
-        host: accounts-ms-base.accounts  # The service to route to
+        host: accounts-ms-base.base.accounts.svc.cluster.local  # The service in the 'base.accounts' namespace
         port:
           number: 80  # The port of the destination service
