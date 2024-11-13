@@ -45,7 +45,7 @@ namespace Accounts.API.Controllers
             return Ok(new Account
             {
                 AccountNumber = accountNumber,
-                AccountType = "Loan",
+                AccountType = "Loan V2",
                 CIF = "1",
                 Balance = 10,
                 BranchCode = "9142"
