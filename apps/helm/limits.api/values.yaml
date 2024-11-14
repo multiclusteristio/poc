@@ -2,8 +2,8 @@ replicaCount: 1
 clusterName: sh2-cluster
 global:
   image:
-    repository: kadirzade/sh2-limitsapi
-    tag: exp
+    repository: kadirzade/mci-limit
+    tag: v1
     pullPolicy: Always
 
   service:
