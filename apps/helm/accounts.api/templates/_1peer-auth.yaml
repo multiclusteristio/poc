@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: account-mtls
+  namespace: accounts  
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: accounts
+  mtls:
+    mode: STRICT
