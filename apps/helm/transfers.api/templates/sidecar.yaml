@@ -11,3 +11,4 @@ spec:
   egress:
   - hosts:
     - "./accounts-ms-base.accounts.svc.cluster.local"
+    - "./limits-ms-base.limits.svc.cluster.local"    
