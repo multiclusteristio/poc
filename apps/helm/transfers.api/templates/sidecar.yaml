@@ -6,8 +6,7 @@ metadata:
 spec:
   workloadSelector:
     labels:
-        app.kubernetes.io/instance: transfers
-        app.kubernetes.io/name: ms-base
+      app.kubernetes.io/instance: transfers
   egress:
   - hosts:
     - "./accounts-ms-base.accounts.svc.cluster.local"

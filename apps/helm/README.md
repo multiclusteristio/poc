@@ -16,6 +16,7 @@ kubectl exec -n istio-system $(kubectl get pods -n istio-system -l istio=ingress
 <!-- accounts -->
 
 istioctl proxy-config routes $(kubectl get pods -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}') -n accounts -o json
+istioctl proxy-config endoints $(kubectl get pods -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}') -n accounts -o json
 istioctl x describe pod $(kubectl get pod -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}').accounts
 kubectl logs $(kubectl get pod -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}') -n accounts -c istio-proxy
 
@@ -30,6 +31,9 @@ kubectl logs $(kubectl get pod -n accounts -l app.kubernetes.io/instance=account
 <!-- transfers -->
 
 istioctl proxy-config routes $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
+istioctl proxy-config endpoints $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
+istioctl proxy-config clusters $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
+istioctl proxy-config listeners $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
 istioctl x describe pod $(kubectl get pod -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}').transfers
 kubectl logs $(kubectl get pod -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -c istio-proxy
 
