@@ -14,6 +14,8 @@ spec:
     - match:
         - uri:
             prefix: /accounts
+      rewrite:
+        uri: /api
       route:
         - destination:
             host: accounts-ms-base.accounts.svc.cluster.local
