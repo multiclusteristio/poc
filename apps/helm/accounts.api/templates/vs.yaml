@@ -13,7 +13,7 @@ spec:
   http:
     - match:
         - uri:
-            prefix: /accounts/  
+            prefix: /accounts  
       # rewrite:
       #   uri: /
       # route:
@@ -30,7 +30,7 @@ spec:
             uri: /api/v1/accounts
           weight: 70
         - destination:
-            host: transfer-service
+            host: accounts-ms-base.accounts.svc.cluster.local
             port:
               number: 80
           rewrite:
