@@ -10,4 +10,5 @@ spec:
         app.kubernetes.io/name: ms-base
   egress:
   - hosts:
-    - "accounts-ms-base.accounts.svc.cluster.local"
+    - "./accounts-ms-base.accounts.svc.cluster.local"
+    - "./limits-ms-base.limits.svc.cluster.local"    
