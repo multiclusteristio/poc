@@ -1,7 +1,7 @@
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: account-ingress-access
+  name: allow-transfer
   namespace: accounts
 spec:
   selector:
