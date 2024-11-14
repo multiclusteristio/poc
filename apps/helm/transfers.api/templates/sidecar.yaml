@@ -1,4 +1,4 @@
-apiVersion: networking.istio.io/v1beta1
+apiVersion: networking.istio.io/v1
 kind: Sidecar
 metadata:
   name: transfers
@@ -13,6 +13,6 @@ spec:
       protocol: HTTP
       name: egresshttp
     hosts:
-    - "accounts-ms/*"
+    - "accounts/*"
   - hosts:
     - "istio-system/*"
