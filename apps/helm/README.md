@@ -8,7 +8,8 @@ to test mtls make a call from cluster to account ms it should not work....
 kubectl exec -n istio-system $(kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}') -- curl -i -s  http://accounts-ms-base.accounts.svc.cluster.local/api/v1/accounts
 
 
-4. Enable account AuthorizationPolicy - miss config ns to show GET account from Thunder client will failt
+4. Enable deny all auth policy to test now ingress can not call account anymore from Thunder client
+5. Enable ingress auth policy to enable ingree access test it will work from Thunder client
 
 
 
