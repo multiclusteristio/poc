@@ -1,13 +1,13 @@
-# apiVersion: networking.istio.io/v1beta1
-# kind: Sidecar
-# metadata:
-#   name: default 
-#   namespace: istio-system # The sidecar in the istio-system namespace applies to the entire mesh
-# spec:
-#   egress:
-#   - hosts: 
-#     - "istio-system/*" # Egress traffic is configured only for workloads in the istio-system namespace
-#   outboundTrafficPolicy:
-#     mode: REGISTRY_ONLY  # The REGISTRY_ONLY mode allows outbound traffic only to services configured by the Sidecar
+apiVersion: networking.istio.io/v1beta1
+kind: Sidecar
+metadata:
+  name: default 
+  namespace: istio-system # The sidecar in the istio-system namespace applies to the entire mesh
+spec:
+  egress:
+  - hosts: 
+    - "istio-system/*" # Egress traffic is configured only for workloads in the istio-system namespace
+  outboundTrafficPolicy:
+    mode: REGISTRY_ONLY  # The REGISTRY_ONLY mode allows outbound traffic only to services configured by the Sidecar
 
 
