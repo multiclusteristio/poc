@@ -2,8 +2,8 @@ replicaCount: 1
 clusterName: sh2-cluster
 global:
   image:
-    repository: kadirzade/sh2-transferssapi
-    tag: v2
+    repository: kadirzade/mci-transfer
+    tag: v1
     pullPolicy: Always
 
   service:
@@ -46,8 +46,8 @@ global:
   env: 
     values:
       - name: ACCOUNTS_URL
-        value: http://helm-accounts-ms-base.accounts.svc.cluster.local/api/v1  
+        value: http://accounts-ms-base.accounts.svc.cluster.local/api/v1  
       - name: LIMITS_URL
-        value: http://helm-limits-ms-base.limits.svc.cluster.local/api/v1            
+        value: http://limits-ms-base.limits.svc.cluster.local/api/v1            
 
       
