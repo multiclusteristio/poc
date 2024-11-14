@@ -6,7 +6,7 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: account
+      app.kubernetes.io/instance: accounts
   rules:
   - from:
     - source:
