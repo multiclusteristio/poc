@@ -1,0 +1,23 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  labels:
+    app.kubernetes.io/instance: limits
+  name: limits
+  namespace: limits
+spec:
+  gateways:
+    - istio-system/banking
+  hosts:
+    - '*'
+  http:
+    - match:
+        - uri:
+            prefix: /limits
+      rewrite:
+        uri: /api
+      route:
+        - destination:
+            host: limits-ms-base.limits.svc.cluster.local
+            port:
+              number: 80     
