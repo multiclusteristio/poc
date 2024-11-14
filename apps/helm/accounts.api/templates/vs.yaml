@@ -13,7 +13,7 @@ spec:
   http:
     - match:
         - uri:
-            exact: /api/v1/accounts
+            prefix: /accounts
       route:
         - destination:
             host: accounts-ms-base.accounts.svc.cluster.local
