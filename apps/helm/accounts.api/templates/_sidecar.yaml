@@ -1,4 +1,3 @@
-# Allow transfer api to call customers and accounts api
 apiVersion: networking.istio.io/v1beta1
 kind: Sidecar
 metadata:
