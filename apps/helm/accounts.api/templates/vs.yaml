@@ -13,36 +13,11 @@ spec:
   http:
     - match:
         - uri:
-            prefix: /accounts  
+            prefix: /accounts
       rewrite:
-        uri: /api/v1/accounts
-      weight: 70  
+        uri: /api
       route:
         - destination:
             host: accounts-ms-base.accounts.svc.cluster.local
             port:
-              number: 80
-      rewrite:
-        uri: /api/v2/accounts
-      weight: 30  
-      route:
-        - destination:
-            host: accounts-ms-base.accounts.svc.cluster.local
-            port:
-              number: 80              
-              
-      # route:
-      #   - destination:
-      #       host: accounts-ms-base.accounts.svc.cluster.local
-      #       port:
-      #         number: 80
-      #     rewrite:
-      #       uri: /api/v1/accounts
-      #     weight: 70
-      #   - destination:
-      #       host: accounts-ms-base.accounts.svc.cluster.local
-      #       port:
-      #         number: 80
-      #     rewrite:
-      #       uri: /api/v2/accounts
-      #     weight: 30              
+              number: 80     
