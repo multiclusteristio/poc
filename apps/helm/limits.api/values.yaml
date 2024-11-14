@@ -13,13 +13,13 @@ global:
   ingress:
     enabled: false
 
-  # resources: 
-  #   limits:
-  #     cpu: 100m
-  #     memory: 256Mi
-  #   requests:
-  #     cpu: 100m
-  #     memory: 256Mi
+  resources: 
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
 
   autoscaling:
     enabled: false
