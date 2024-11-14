@@ -14,12 +14,25 @@ spec:
     - match:
         - uri:
             prefix: /accounts/  
-      rewrite:
-        uri: /
+      # rewrite:
+      #   uri: /
+      # route:
+      #   - destination:
+      #       host: accounts-ms-base.accounts.svc.cluster.local
+      #       port:
+      #         number: 80
       route:
         - destination:
             host: accounts-ms-base.accounts.svc.cluster.local
             port:
               number: 80
-
-              
+          rewrite:
+            uri: /api/v1/accounts
+          weight: 70
+        - destination:
+            host: transfer-service
+            port:
+              number: 80
+          rewrite:
+            uri: /api/v1/accounts
+          weight: 30              
