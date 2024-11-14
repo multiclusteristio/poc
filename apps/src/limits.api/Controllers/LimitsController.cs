@@ -21,12 +21,12 @@ namespace Limits.API.Controllers
         [ProducesResponseType(typeof(Error[]), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetLimit([FromQuery] string cif)
         {
-            var headers = Request.Headers.ToDictionary(k => k.Key, v => v.Value.First());
+            // var headers = Request.Headers.ToDictionary(k => k.Key, v => v.Value.First());
 
-            if (headers.Any())
-            {
-                throw new Exception(string.Join(",", headers.Select(x => x.Value)));
-            }
+            // if (headers.Any())
+            // {
+            //     throw new Exception(string.Join(",", headers.Select(x => x.Value)));
+            // }
 
             return Ok(new
             {

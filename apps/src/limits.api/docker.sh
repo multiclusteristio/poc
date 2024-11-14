@@ -1,1 +1,1 @@
-sh build_and_push.sh limit v1
+sh build_and_push.sh limit v2
