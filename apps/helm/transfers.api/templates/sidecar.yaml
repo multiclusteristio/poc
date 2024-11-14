@@ -12,7 +12,8 @@ spec:
       number: 80
       protocol: HTTP
       name: egresshttp
-    # hosts:
-    # - "accounts/*"
+    hosts:
+    - "accounts/*"
+    - "limits/*"    
   - hosts:
     - "istio-system/*"
