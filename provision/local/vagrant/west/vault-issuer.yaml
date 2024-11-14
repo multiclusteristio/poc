@@ -1,0 +1,16 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: istio-ca
+  namespace: istio-system    
+spec:
+  vault:
+    server: http://192.168.1.10:31000
+    path: pki/sign/istio-ca-west
+    auth:
+      kubernetes:
+        mountPath: /v1/auth/west
+        role: issuer
+        secretRef:
+          name: issuer-token-lmzpj
+          key: token           

@@ -1,6 +1,10 @@
 ---
 - hosts: all
   become: true
+  vars:
+
+    vault_command_east: "kubectl exec -n vault -it vault-0 -- vault"
+    vault_command_west: "vault"
 
   tasks:  
     - name: Install Docker and Dependencies
@@ -19,9 +23,13 @@
     - name: Install Helm and Manage Repositories
       include_tasks: tasks/helm.yml
 
-    - name: Install and Configure Vault
-      include_tasks: tasks/vault.yml
+    - name: Install Vault
+      include_tasks: tasks/vault-install.yml    
+      when: inventory_hostname == "east"     
 
+    - name: Configure Vault
+      include_tasks: tasks/vault-configure.yml        
+ 
     - name: Save Istio Remote Secret File
       include_tasks: tasks/remote-secret.yml        
 

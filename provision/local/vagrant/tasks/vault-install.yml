@@ -1,0 +1,34 @@
+
+- name: Create the Vault namespace
+  command: kubectl create namespace vault --context kind-{{ inventory_hostname }}
+  ignore_errors: true  # Ignore error if namespace already exists    
+
+- name: Check if Vault pod is already running
+  command: kubectl --context kind-{{ inventory_hostname }} get pods vault-0 -n vault --no-headers
+  register: vault_pod_status
+  ignore_errors: true      
+
+- name: Install Vault using Helm (with dev mode and HA disabled, NodePort service)
+  command: >
+    helm install vault hashicorp/vault --namespace vault \
+    --set server.ha.enabled=false \
+    --set server.dev.enabled=true \
+    --set server.dataStorage.enabled=false \
+    --set server.service.type=NodePort \
+    --set "server.service.nodePort={{ vault_node_port }}" \
+    --set ingress.enabled=false \
+    --set "server.dev.rootToken={{ vault_root_token }}"
+  when: vault_pod_status.rc != 0     
+
+- name: Wait for pod to be running
+  shell: |
+    kubectl --context kind-{{ inventory_hostname }} get pods vault-0 -n vault -o jsonpath='{.status.phase}'
+  register: pod_status
+  until: pod_status.stdout == "Running"
+  retries: 30  # Maximum retries
+  delay: 5  # Delay between retries (in seconds)
+  failed_when: pod_status.stdout != "Running"  # Fail if the pod is not running after retries
+
+- name: Print Vault Pod status
+  debug:
+    var: pod_status.stdout 

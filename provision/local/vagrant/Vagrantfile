@@ -31,13 +31,28 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  # Define west VM with public IP
-  # config.vm.define "west" do |west|
-  #   west.vm.hostname = "west"
-  #   west.vm.network "public_network", ip: "192.168.1.11"  # Replace with a suitable IP for your network
-  #   west.vm.provision "ansible_local" do |ansible|
-  #     ansible.playbook = "playbook.yml"
-  #     ansible.extra_vars = { "inventory_hostname": "west" }
-  #   end
-  # end
+  # # Define west VM with public IP
+  config.vm.define "west" do |west|
+    west.vm.hostname = "west"
+    west.vm.network "public_network", ip: "192.168.1.11"
+
+
+    west.vm.network "forwarded_port", guest: 32000, host: 32001  
+    west.vm.network "forwarded_port", guest: 30080, host: 31080     
+    west.vm.network "forwarded_port", guest: 30443, host: 31443  
+
+    west.vm.provision "ansible_local" do |ansible|
+      ansible.playbook = "playbook.yml"
+      ansible.extra_vars = { 
+        "inventory_hostname" => "west",
+        "argo_node_port" => "32000",
+        "istio_igw_http_port" => "30080",
+        "istio_igw_https_port" => "30443",
+        "istio_version" => "1.23.3",
+        "istio_mesh_name" => "uaemesh"                
+      }
+    end
+  end
+
+
 end
