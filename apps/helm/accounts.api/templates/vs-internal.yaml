@@ -13,7 +13,7 @@ spec:
         - uri:
             prefix: /accounts/
       rewrite:
-        uri: /api
+        uri: /api/
       route:
         - destination:
             host: accounts-ms-base.accounts.svc.cluster.local
