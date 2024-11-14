@@ -8,12 +8,12 @@ spec:
     labels:
       app.kubernetes.io/instance: transfers 
   egress:
-  # - port:
-  #     number: 80
-  #     protocol: HTTP
-  #     name: egresshttp
-  #   hosts:
-  #   - "accounts/*"
-  #   - "limits/*"    
+  - port:
+      number: 80
+      protocol: HTTP
+      name: egresshttp
+    # hosts:
+    # - "accounts/*"
+    # - "limits/*"    
   - hosts:
     - "istio-system/*"
