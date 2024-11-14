@@ -43,7 +43,7 @@
   when: istiod_status.rc == 1 and istio_base_status.rc in [0, 1]
 
 - name: Wait for Istiod to be fully deployed
-  command: kubectl --context kind-{{ inventory_hostname }} rollout status deployment/istiod -n istio-system
+  command: kubectl --context kind-{{ inventory_hostname }} -n istio-system wait --for=condition=Ready pod -l app=istiod --timeout=300s
   register: istiod_rollout_status
   retries: 30
   delay: 10
