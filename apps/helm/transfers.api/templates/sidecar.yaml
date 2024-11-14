@@ -1,0 +1,13 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Sidecar
+metadata:
+  name: transfers
+  namespace: transfers
+spec:
+  workloadSelector:
+    labels:
+        app.kubernetes.io/instance: transfers
+        app.kubernetes.io/name: ms-base
+  egress:
+  - hosts:
+    - "./accounts-ms-base.accounts.svc.cluster.local"

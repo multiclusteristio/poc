@@ -27,6 +27,13 @@ istioctl x describe pod $(kubectl get pod -n accounts -l app.kubernetes.io/insta
 kubectl logs $(kubectl get pod -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}') -n accounts -c istio-proxy
 
 
+<!-- transfers -->
+
+istioctl proxy-config routes $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
+istioctl x describe pod $(kubectl get pod -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}').transfers
+kubectl logs $(kubectl get pod -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -c istio-proxy
+
+
 
 istioctl proxy-config routes $(kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}') -n istio-system -o json
 
