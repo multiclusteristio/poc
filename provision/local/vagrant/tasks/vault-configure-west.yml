@@ -1,0 +1,71 @@
+---
+
+- name: Set vault variables
+  set_fact:
+    vault_host: "192.168.1.10"
+    vault_port: "31000"       
+    vault_token: "root" 
+    kubernetes_host: "https://192.168.1.11:6443"
+
+- name: Create istio system namespace
+  command: >
+    kubectl apply -f ./istio/istio-ns.yaml
+  ignore_errors: true
+
+- name: Create istio cert issuer resources for vault access
+  command: >
+    kubectl apply -f ./istio/issuer-sa.yaml \
+    -f ./istio/issuer-sa-token.yaml \
+    -f ./istio/issuer-crb.yaml
+  ignore_errors: true
+
+- name: Enable Kubernetes auth method in Vault
+  shell: "vault auth enable --path={{ inventory_hostname }} kubernetes"
+  environment:
+    VAULT_ADDR: "http://{{ vault_host }}:{{ vault_port }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+  ignore_errors: true
+
+- name: Get Kubernetes CA certificate from the cluster
+  shell: |
+    kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode
+  register: k8s_ca
+
+- name: Get Service Account token for istio cert issuer
+  shell: |
+    kubectl get secret issuer-token-lmzpj -n istio-system -o jsonpath='{.data.token}' | base64 --decode
+  register: sa_token
+
+- name: Configure Kubernetes auth method for cluster
+  shell: |
+    vault write auth/{{ inventory_hostname }}/config \
+    token_reviewer_jwt="{{ sa_token.stdout }}" \
+    kubernetes_host=" {{ kubernetes_host }} " \
+    kubernetes_ca_cert="{{ k8s_ca.stdout }}" \
+    issuer="https://kubernetes.default.svc.cluster.local"
+  environment:
+    VAULT_ADDR: "http://{{ vault_host }}:{{ vault_port }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+
+- name: Create Vault role for istio
+  shell: |
+    vault write auth/{{ inventory_hostname }}/role/issuer \
+    bound_service_account_names=issuer \
+    bound_service_account_namespaces=istio-system \
+    policies=pki \
+    ttl=1h
+  environment:
+    VAULT_ADDR: "http://{{ vault_host }}:{{ vault_port }}"
+    VAULT_TOKEN: "{{ vault_token }}"
+
+- name: Print sa_token
+  debug:
+    var: sa_token.stdout
+
+- name: Print k8s_host
+  debug:
+    var: k8s_host.stdout
+
+- name: Print k8s_ca
+  debug:
+    var: k8s_ca.stdout

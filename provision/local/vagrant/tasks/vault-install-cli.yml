@@ -1,0 +1,38 @@
+- name: Check if Vault is already installed
+  command: vault --version
+  register: vault_installed
+  ignore_errors: true
+
+- name: Set Vault version
+  set_fact:
+    vault_version: "1.14.0"
+
+- name: Download Vault if not installed
+  get_url:
+    url: "https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_linux_amd64.zip"
+    dest: "/tmp/vault_{{ vault_version }}_linux_amd64.zip"
+  when: vault_installed.rc != 0
+
+- name: Install unzip if not present
+  apt:
+    name: unzip
+    state: present
+  when: vault_installed.rc != 0
+
+- name: Unzip Vault binary
+  unarchive:
+    src: "/tmp/vault_{{ vault_version }}_linux_amd64.zip"
+    dest: "/usr/local/bin/"
+    remote_src: yes
+  when: vault_installed.rc != 0
+
+- name: Verify Vault installation
+  command: vault --version
+  register: vault_check
+  changed_when: false
+
+- name: Clean up Vault zip file
+  file:
+    path: "/tmp/vault_{{ vault_version }}_linux_amd64.zip"
+    state: absent
+  when: vault_installed.rc != 0

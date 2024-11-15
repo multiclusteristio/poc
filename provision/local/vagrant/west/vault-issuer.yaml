@@ -6,7 +6,7 @@ metadata:
 spec:
   vault:
     server: http://192.168.1.10:31000
-    path: pki/sign/istio-ca-west
+    path: pki/sign/istio-ca
     auth:
       kubernetes:
         mountPath: /v1/auth/west

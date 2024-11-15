@@ -1,8 +1,8 @@
 
 
-- name: Set vault_command based on inventory_hostname
+- name: Set vault_command variable
   set_fact:
-    vault_command: "{{ vault_command_east if inventory_hostname == 'east' else vault_command_west }}" 
+    vault_command: "kubectl exec -n vault -it vault-0 -- vault"
 
 - name: Enable PKI secrets engine
   command: "{{ vault_command }} secrets enable pki"
@@ -22,7 +22,7 @@
 
 - name: Configure a role for certificate issuance
   shell: |
-      {{ vault_command }} write pki/roles/istio-ca-{{ inventory_hostname }} \
+      {{ vault_command }} write pki/roles/istio-ca \
       allowed_domains=istio-ca \
       allow_any_name=true  \
       enforce_hostnames=false \
@@ -32,12 +32,12 @@
 
 - name: Create istio system ns
   command: >
-    kubectl --context kind-{{ inventory_hostname }} apply -f ./istio/istio-ns.yaml 
+    kubectl apply -f ./istio/istio-ns.yaml 
   ignore_errors: true
 
 - name: Create istio cert issuer resources for vault access
   command: >
-    kubectl --context kind-{{ inventory_hostname }} apply -f ./istio/issuer-sa.yaml \
+    kubectl apply -f ./istio/issuer-sa.yaml \
     -f ./istio/issuer-sa-token.yaml \
     -f ./istio/issuer-crb.yaml
   ignore_errors: true            
@@ -52,12 +52,12 @@
 
 - name: Get Kubernetes CA certificate from the cluster
   shell: |
-    kubectl --context kind-{{ inventory_hostname }} config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode
+    kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode
   register: k8s_ca      
 
 - name: Get Service Account token for istio cert issuer
   shell: |
-    kubectl --context kind-{{ inventory_hostname }} get secret issuer-token-lmzpj -n istio-system -o jsonpath='{.data.token}' | base64 --decode
+    kubectl get secret issuer-token-lmzpj -n istio-system -o jsonpath='{.data.token}' | base64 --decode
   register: sa_token    
 
 - name: Configure Kubernetes auth method for east cluster
@@ -66,8 +66,7 @@
       token_reviewer_jwt="{{ sa_token.stdout }}" \
       kubernetes_host="https://kubernetes.default.svc" \
       kubernetes_ca_cert="{{ k8s_ca.stdout }}" \
-      issuer="https://kubernetes.default.svc.cluster.local"
-  when: inventory_hostname == 'east'           
+      issuer="https://kubernetes.default.svc.cluster.local"      
       
 - name: Create pki policy
   shell: |
