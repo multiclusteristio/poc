@@ -2,13 +2,14 @@
 - hosts: localhost
   become: true
   vars:
+
     clusters:
       - name: auh
-        kubeconfig: "/tmp/kind-auh.kubeconfig"  
+        kubeconfig: "{{ ansible_env.HOME }}/.kube/kind-auh.kubeconfig"
         kubecontext: "kind-auh"
         argocdnodeport: 30001
       - name: dxb
-        kubeconfig: "/tmp/kind-dxb.kubeconfig"  
+        kubeconfig: "{{ ansible_env.HOME }}/.kube/kind-dxb.kubeconfig"  
         kubecontext: "kind-dxb"
         argocdnodeport: 30002
                  
@@ -20,7 +21,13 @@
       include_tasks: tasks/kubectl.yml      
 
     - name: Install kind
-      include_tasks: tasks/kind.yml   
+      include_tasks: tasks/kind-install.yml   
+
+    - name: Create kind clusters
+      include_tasks: tasks/kind-clusters.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster        
 
     - name: Install helm
       include_tasks: tasks/helm.yml    
