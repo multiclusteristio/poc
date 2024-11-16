@@ -1,4 +1,9 @@
 ---
+- name: Set variables
+  set_fact:    
+    istio_version: "1.23.3"
+    istio_mesh_name: "uaemesh"    
+
 - name: Add Istio Helm repository
   command: helm repo add istio https://istio-release.storage.googleapis.com/charts
   register: istio_repo_add
@@ -79,11 +84,11 @@
     --set service.ports[0].name=http \
     --set service.ports[0].port=80 \
     --set service.ports[0].targetPort=8080 \
-    --set service.ports[0].nodePort={{ istio_igw_http_port }} \
+    --set service.ports[0].nodePort={{ cluster.istio_igw_http_port }} \
     --set service.ports[1].name=https \
     --set service.ports[1].port=443 \
     --set service.ports[1].targetPort=8443 \
-    --set service.ports[1].nodePort={{ istio_igw_https_port }}
+    --set service.ports[1].nodePort={{ cluster.istio_igw_https_port }}
   when: istio_gateway_status.rc == 1 and istiod_status.rc in [0, 1]
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"

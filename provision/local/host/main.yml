@@ -8,10 +8,16 @@
         kubeconfig: "{{ ansible_env.HOME }}/.kube/kind-auh.kubeconfig"
         kubecontext: "kind-auh"
         argocdnodeport: 30001
+        istio_igw_http_port: 30080
+        istio_igw_https_port: 30443
       - name: dxb
         kubeconfig: "{{ ansible_env.HOME }}/.kube/kind-dxb.kubeconfig"  
         kubecontext: "kind-dxb"
         argocdnodeport: 30002
+        istio_igw_http_port: 31080        
+        istio_igw_https_port: 31443
+
+          
                  
   tasks:  
     - name: Install Docker and Dependencies
@@ -66,4 +72,10 @@
       include_tasks: tasks/cert-manager-istio-csr.yml
       loop: "{{ clusters }}"
       loop_control:
-        loop_var: cluster          
+        loop_var: cluster   
+
+    - name: Install istio
+      include_tasks: tasks/istio.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster                  

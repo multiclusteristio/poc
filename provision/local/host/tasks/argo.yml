@@ -36,3 +36,4 @@
     -p "{\"data\": {\"admin.password\": \"{{ admin_password | b64encode }}\"}}"
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"    
+ 
