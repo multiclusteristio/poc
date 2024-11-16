@@ -1,11 +1,11 @@
 
 - name: Create cluster with kind
-  shell: kind create cluster --name {{ cluster.name }}
+  shell: kind create cluster --name {{ cluster.name }} --config=./kind/{{ cluster.name }}/kind-config.yaml
   ignore_errors: true
   become: false
 
 - name: Export kubeconfig for the cluster
-  shell: kind get kubeconfig --name {{ cluster.name }} > {{ cluster.kubeconfig }}
+  shell: kind get kubeconfig --name {{ cluster.name }} > {{ cluster.kubeconfig }} 
   changed_when: false
   become: true
 

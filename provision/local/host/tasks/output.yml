@@ -1,0 +1,19 @@
+- name: Get NodePort for ArgoCD server in each cluster
+  command: kubectl -n argocd get svc argocd-server -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}'
+  register: argocd_nodeport
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+
+- name: Get Docker container IP for the cluster
+  shell: docker inspect -f '{% raw %}{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}{% endraw %}' {{ cluster.name }}-control-plane
+  register: docker_ip
+  ignore_errors: true
+
+- name: Set ArgoCD endpoint based on NodePort and Docker IP
+  set_fact:
+    argocd_endpoint: >
+      http://localhost:{{ argocd_nodeport.stdout }}
+
+- name: Print ArgoCD endpoint
+  debug:
+    msg: "ArgoCD for cluster {{ cluster.name }} is available at: {{ argocd_endpoint }}"

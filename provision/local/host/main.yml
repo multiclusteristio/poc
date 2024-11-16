@@ -78,4 +78,10 @@
       include_tasks: tasks/istio.yml
       loop: "{{ clusters }}"
       loop_control:
-        loop_var: cluster                  
+        loop_var: cluster   
+
+    - name: Outputs
+      include_tasks: tasks/output.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster                          
