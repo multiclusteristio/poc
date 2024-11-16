@@ -1,0 +1,43 @@
+- name: Set vault_command variable
+  set_fact:
+    vault_command: "kubectl exec -n vault -it vault-0 -- vault"
+    root_pki_path: "pki_root"
+    certs_path: "./certs"
+    vault_host: "http://vault.vault.svc.cluster.local:8200"
+
+- name: Create a directory for storing certificates on the controller
+  file:
+    path: "{{ certs_path }}"
+    state: directory
+    mode: "0755"
+  delegate_to: localhost
+
+
+# Step 2: Enable the Root PKI engine in Vault
+- name: Enable the Root PKI engine in Vault
+  command: >
+    {{ vault_command }} secrets enable -path={{ root_pki_path }} pki
+  ignore_errors: true
+
+# Step 3: Generate the Root CA certificate
+- name: Generate the Root CA certificate
+  command: >
+    {{ vault_command }} write -field=certificate {{ root_pki_path }}/root/generate/internal
+    common_name="mydomain.com" ttl=87600h
+  register: root_cert
+
+
+# Step 4: Save the Root CA certificate to file
+- name: Save the Root CA certificate to the controller
+  copy:
+    content: "{{ root_cert.stdout }}"
+    dest: "{{ certs_path }}/CA_cert.crt"
+    mode: "0644"
+  delegate_to: localhost
+
+# Step 5: Configure the URL paths for the Root PKI engine
+- name: Configure the URL paths for the Root PKI engine
+  command: >
+    {{ vault_command }} write {{ root_pki_path }}/config/urls
+    issuing_certificates="{{ vault_host }}/v1/{{ root_pki_path }}/ca"
+    crl_distribution_points="{{ vault_host }}/v1/{{ root_pki_path }}/crl"

@@ -1,0 +1,57 @@
+---
+- hosts: localhost
+  become: true
+  vars:
+    clusters:
+      - name: auh
+        kubeconfig: "/tmp/kind-auh.kubeconfig"  
+        kubecontext: "kind-auh"
+        argocdnodeport: 30001
+      - name: dxb
+        kubeconfig: "/tmp/kind-dxb.kubeconfig"  
+        kubecontext: "kind-dxb"
+        argocdnodeport: 30002
+         
+
+  tasks:  
+    # - name: Install Docker and Dependencies
+    #   include_tasks: tasks/docker.yml
+
+    # - name: Install kubectl
+    #   include_tasks: tasks/kubectl.yml      
+
+    # - name: Install kind
+    #   include_tasks: tasks/kind.yml   
+
+    # - name: Install helm
+    #   include_tasks: tasks/helm.yml    
+
+    - name: Install vault
+      include_tasks: tasks/vault.yml  
+
+    - name: Enable vault PKI
+      include_tasks: tasks/vault-pki.yml         
+
+    - name: Configure vault k8s auth for all clusters
+      include_tasks: tasks/vault-auth.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster      
+
+    - name: Configure ArgoCD for all clusters
+      include_tasks: tasks/argo.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster   
+
+    - name: Install cert manager
+      include_tasks: tasks/cert-manager.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster   
+
+    - name: Install cert manager
+      include_tasks: tasks/cert-manager.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster          

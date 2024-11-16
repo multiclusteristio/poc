@@ -37,8 +37,12 @@
   template:
     src: ./{{ inventory_hostname }}/kind-config.yaml.j2
     dest: /tmp/kind-config.yaml     
-  when: inventory_hostname not in kind_clusters.stdout           
+  when: inventory_hostname not in kind_clusters.stdout    
+         
 - name: Create Kind cluster if it does not exist
   command: kind create cluster --name {{ inventory_hostname }} --config=/tmp/kind-config.yaml
   when: inventory_hostname not in kind_clusters.stdout
 
+# - name: Create Kind cluster if it does not exist ( west )
+#   command: kind create cluster --name {{ inventory_hostname }} --config=/tmp/kind-config.yaml --apiserver-arg=apiserver-cert-extra-sans=192.168.1.11
+#   when: inventory_hostname not in kind_clusters.stdout and inventory_hostname == 'west'  

@@ -1,0 +1,121 @@
+
+# ---
+# - name: Set up PKI Root and Intermediate CAs on Vault using CLI
+#   hosts: vault_clusters
+#   become: true
+#   vars:
+#     vault_token: "your_vault_token_here"
+#     vault_address: "http://localhost:8200"  # Adjust Vault address as needed
+#     certs_path: "/tmp/certs"  # Path to store certificate files (locally on the Ansible host)
+#     root_pki_path: "pki_root"
+#     intermediate_pki_prefix: "pki_int"
+
+#   tasks:
+#     - name: Create a directory for storing certificates
+#       file:
+#         path: "{{ certs_path }}"
+#         state: directory
+#         mode: "0755"
+
+#     - name: Enable the Root PKI engine in Vault
+#       command: >
+#         vault secrets enable -path={{ root_pki_path }} pki
+#       environment:
+#         VAULT_ADDR: "{{ vault_address }}"
+#         VAULT_TOKEN: "{{ vault_token }}"
+
+#     - name: Generate the Root CA certificate
+#       command: >
+#         vault write -field=certificate {{ root_pki_path }}/root/generate/internal
+#         common_name="mydomain.com" ttl=87600h
+#       environment:
+#         VAULT_ADDR: "{{ vault_address }}"
+#         VAULT_TOKEN: "{{ vault_token }}"
+#       register: root_cert
+
+#     - name: Save the Root CA certificate to file
+#       copy:
+#         content: "{{ root_cert.stdout }}"
+#         dest: "{{ certs_path }}/CA_cert.crt"
+#         mode: "0644"
+
+#     - name: Configure the URL paths for the Root PKI engine
+#       command: >
+#         vault write {{ root_pki_path }}/config/urls
+#         issuing_certificates="localhost:8200/v1/{{ root_pki_path }}/ca"
+#         crl_distribution_points="localhost:8200/v1/{{ root_pki_path }}/crl"
+#       environment:
+#         VAULT_ADDR: "{{ vault_address }}"
+#         VAULT_TOKEN: "{{ vault_token }}"
+
+#     - name: Create Intermediate PKI engine for the given cluster
+#       command: >
+#         vault secrets enable -path={{ intermediate_pki_prefix }}_{{ inventory_hostname }} pki
+#       environment:
+#         VAULT_ADDR: "{{ vault_address }}"
+#         VAULT_TOKEN: "{{ vault_token }}"
+
+#     - name: Set the max lease TTL for the Intermediate PKI engine
+#       command: >
+#         vault secrets tune -max-lease-ttl=43800h {{ intermediate_pki_prefix }}_{{ inventory_hostname }}
+#       environment:
+#         VAULT_ADDR: "{{ vault_address }}"
+#         VAULT_TOKEN: "{{ vault_token }}"
+
+#     - name: Generate the Intermediate CA certificate signing request (CSR)
+#       command: >
+#         vault write -format=json {{ intermediate_pki_prefix }}_{{ inventory_hostname }}/intermediate/generate/internal
+#         common_name="mydomain.com intermediate {{ inventory_hostname }}"
+#       environment:
+#         VAULT_ADDR: "{{ vault_address }}"
+#         VAULT_TOKEN: "{{ vault_token }}"
+#       register: intermediate_csr
+
+#     - name: Save the Intermediate CSR to file
+#       copy:
+#         content: "{{ intermediate_csr.json.data.csr }}"
+#         dest: "{{ certs_path }}/pki_intermediate_{{ inventory_hostname }}.csr"
+#         mode: "0644"
+
+#     - name: Sign the Intermediate certificate using the Root CA
+#       command: >
+#         vault write -format=json {{ root_pki_path }}/root/sign-intermediate
+#         csr=@{{ certs_path }}/pki_intermediate_{{ inventory_hostname }}.csr
+#         format=pem ttl="43800h"
+#       environment:
+#         VAULT_ADDR: "{{ vault_address }}"
+#         VAULT_TOKEN: "{{ vault_token }}"
+#       register: signed_intermediate_cert
+
+#     - name: Save the signed Intermediate certificate
+#       copy:
+#         content: "{{ signed_intermediate_cert.json.data.certificate }}"
+#         dest: "{{ certs_path }}/intermediate_{{ inventory_hostname }}.cert.pem"
+#         mode: "0644"
+
+#     - name: Combine the Intermediate certificate and Root certificate into a chain
+#       command: >
+#         cat {{ certs_path }}/intermediate_{{ inventory_hostname }}.cert.pem {{ certs_path }}/CA_cert.crt
+#         > {{ certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem
+#       delegate_to: localhost
+
+#     - name: Upload the signed Intermediate certificate chain to Vault
+#       command: >
+#         vault write {{ intermediate_pki_prefix }}_{{ inventory_hostname }}/intermediate/set-signed
+#         certificate=@{{ certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem
+#       environment:
+#         VAULT_ADDR: "{{ vault_address }}"
+#         VAULT_TOKEN: "{{ vault_token }}"
+
+#     - name: Create a role in the Intermediate PKI engine for Istio
+#       command: >
+#         vault write {{ intermediate_pki_prefix }}_{{ inventory_hostname }}/roles/istio-ca-{{ inventory_hostname }}
+#         allowed_domains=istio-ca
+#         allow_any_name=true
+#         enforce_hostnames=false
+#         require_cn=false
+#         allowed_uri_sans="spiffe://*"
+#         max_ttl=72h
+#       environment:
+#         VAULT_ADDR: "{{ vault_address }}"
+#         VAULT_TOKEN: "{{ vault_token }}"

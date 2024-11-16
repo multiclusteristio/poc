@@ -1,0 +1,22 @@
+---
+- name: Set variables
+  set_fact:
+    desired_version: "v1.25.0"
+
+- name: Check if kubectl is installed
+  command: kubectl version --client=true
+  register: kubectl_check
+  ignore_errors: true
+
+- name: Install a specific version of kubectl
+  shell: |
+    curl -LO https://dl.k8s.io/release/{{ desired_version }}/bin/darwin/amd64/kubectl
+    mv kubectl /usr/local/bin/kubectl
+    chmod +x /usr/local/bin/kubectl
+  when: kubectl_check.failed
+  become: false
+
+- name: Ensure kubectl version matches the desired version
+  command: kubectl version --client=true
+  when: kubectl_check.failed
+  register: kubectl_version_check

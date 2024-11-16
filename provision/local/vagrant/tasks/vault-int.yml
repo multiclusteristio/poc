@@ -1,0 +1,197 @@
+- name: Set vault_command variable
+  set_fact:
+    vault_command: "kubectl exec -n vault vault-0 -- vault"
+    root_pki_path: "pki_root"
+    certs_path: "./certs"
+    intermediate_pki_prefix: "pki_int"
+    remote_certs_path: "/tmp/certs"    
+
+- name: Ensure the destination directory exists
+  file:
+    path: "{{ remote_certs_path }}"
+    state: directory
+    mode: "0755"
+
+- name: Upload Root CA to remote VM
+  copy:
+    src: "{{ certs_path }}/CA_cert.crt"
+    dest: "{{ remote_certs_path }}/CA_cert.crt"
+    mode: "0644"
+
+- name: Enable Intermediate PKI engine for the cluster
+  command: >
+    {{ vault_command }} secrets enable -path={{ intermediate_pki_prefix }}_{{ inventory_hostname }} pki
+  ignore_errors: true
+
+- name: Set max lease TTL for Intermediate PKI
+  command: >
+    {{ vault_command }} secrets tune -max-lease-ttl=43800h {{ intermediate_pki_prefix }}_{{ inventory_hostname }}
+
+- name: Generate Intermediate CSR
+  shell: >
+    {{ vault_command }} write -format=json {{ intermediate_pki_prefix }}_{{ inventory_hostname }}/intermediate/generate/internal
+    common_name="mydomain.com intermediate {{ inventory_hostname }}"
+  register: intermediate_csr
+
+- name: Save the Intermediate CSR to file on the host
+  copy:
+    content: "{{ (intermediate_csr.stdout | from_json).data.csr }}"
+    dest: "{{ remote_certs_path }}/pki_intermediate_{{ inventory_hostname }}.csr"
+    mode: "0644"
+
+- name: Create directory in Vault pod if it doesn't exist
+  command: >
+    kubectl exec -n vault vault-0 -- mkdir -p {{ remote_certs_path }}
+
+- name: Copy CSR to the Vault pod
+  command: >
+    kubectl cp {{ remote_certs_path }}/pki_intermediate_{{ inventory_hostname }}.csr vault/vault-0:{{ remote_certs_path }}/pki_intermediate_{{ inventory_hostname }}.csr
+
+- name: Sign the Intermediate CSR using Root CA
+  shell: >
+    {{ vault_command }} write -format=json {{ root_pki_path }}/root/sign-intermediate
+    csr=@"{{ remote_certs_path }}/pki_intermediate_{{ inventory_hostname }}.csr"
+    format=pem ttl="43800h"
+  register: signed_intermediate_cert
+
+- name: Save the signed Intermediate certificate to remote VM
+  copy:
+    content: "{{ (signed_intermediate_cert.stdout | from_json).data.certificate }}"
+    dest: "{{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.cert.pem"
+    mode: "0644"
+
+- name: Combine Intermediate and Root Certificates on remote VM
+  shell: |
+    {
+      cat {{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.cert.pem;
+      echo "";
+      cat {{ remote_certs_path }}/CA_cert.crt;
+    } > {{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem
+  args:
+    executable: /bin/bash
+
+
+- name: Fetch combined certificate chain to host
+  fetch:
+    src: "{{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem"
+    dest: "{{ certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem"
+    flat: yes
+
+- name: Validate certificate content with openssl
+  shell: |
+    openssl x509 -in {{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem -text -noout
+  register: openssl_output
+  failed_when: openssl_output.rc != 0
+  changed_when: false  
+
+- name: Copy the signed Intermediate certificate chain to the Vault pod
+  command: >
+    kubectl cp {{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem vault/vault-0:{{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem
+
+- name: Read the signed Intermediate certificate chain from the Vault pod
+  command: >
+    kubectl exec -n vault -it vault-0 -- cat {{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem
+  register: intermediate_chain_content
+
+- name: Check if certificate file exists on the Vault pod
+  shell: |
+    kubectl exec -n vault vault-0 -- ls {{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem
+  register: cert_file_check
+  failed_when: cert_file_check.rc != 0
+  changed_when: false
+
+- name: Debug certificate file existence
+  debug:
+    msg: "Certificate file exists: {{ cert_file_check.stdout }}"  
+
+- name: Display certificate content on the Vault pod
+  shell: |
+    kubectl exec -n vault vault-0 -- cat {{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem
+  register: cert_content
+
+- name: Debug certificate content
+  debug:
+    msg: "{{ cert_content.stdout }}" 
+  
+
+- name: Debug openssl validation output
+  debug:
+    msg: "{{ openssl_output.stdout }}"
+
+
+- name: Upload signed Intermediate certificate chain to Vault
+  shell: >
+    {{ vault_command }} write {{ intermediate_pki_prefix }}_{{ inventory_hostname }}/intermediate/set-signed
+    certificate=@"{{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem"
+
+- name: Configure a role for certificate issuance
+  shell: |
+      {{ vault_command }} write {{ intermediate_pki_prefix }}_{{ inventory_hostname }}/roles/istio-ca \
+      allowed_domains=istio-ca \
+      allow_any_name=true  \
+      enforce_hostnames=false \
+      require_cn=false \
+      allowed_uri_sans="spiffe://*" \
+      max_ttl=72h
+
+- name: Create istio system ns
+  command: >
+    kubectl apply -f ./istio/istio-ns.yaml 
+  ignore_errors: true
+
+- name: Create istio cert issuer resources for vault access
+  command: >
+    kubectl apply -f ./istio/issuer-sa.yaml \
+    -f ./istio/issuer-sa-token.yaml \
+    -f ./istio/issuer-crb.yaml
+  ignore_errors: true            
+      
+- name: Enable Kubernetes auth method in Vault
+  shell: "{{ vault_command }} auth enable --path={{ inventory_hostname }} kubernetes"
+  ignore_errors: true      
+
+- name: Get Kubernetes CA certificate from the cluster
+  shell: |
+    kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode
+  register: k8s_ca      
+
+- name: Get Service Account token for istio cert issuer
+  shell: |
+    kubectl get secret issuer-token-lmzpj -n istio-system -o jsonpath='{.data.token}' | base64 --decode
+  register: sa_token    
+
+- name: Configure Kubernetes auth method for east cluster
+  shell: |
+      {{ vault_command }} write auth/{{ inventory_hostname }}/config \
+      token_reviewer_jwt="{{ sa_token.stdout }}" \
+      kubernetes_host="https://kubernetes.default.svc" \
+      kubernetes_ca_cert="{{ k8s_ca.stdout }}" \
+      issuer="https://kubernetes.default.svc.cluster.local"      
+      
+- name: Create pki policy
+  shell: |
+    echo "
+    path \"{{ intermediate_pki_prefix }}_{{ inventory_hostname }}*\" {
+      capabilities = [\"create\", \"read\", \"update\", \"delete\", \"list\"]
+    }" | {{ vault_command }} policy write pki -
+  ignore_errors: true
+
+
+- name: Create Vault role for istio
+  shell: |
+      {{ vault_command }} write auth/{{ inventory_hostname }}/role/issuer \
+      bound_service_account_names=issuer \
+      bound_service_account_namespaces=istio-system \
+      policies=pki
+      ttl=1h    
+
+- name: Print sa_token
+  debug:
+    var: sa_token.stdout  
+- name: Print k8s_host
+  debug:
+    var: k8s_host.stdout 
+- name: Print k8s_ca
+  debug:
+    var: k8s_ca.stdout      
+

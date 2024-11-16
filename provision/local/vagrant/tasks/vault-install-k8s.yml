@@ -1,12 +1,28 @@
+- name: Set variables
+  set_fact:
+    vault_root_token: "root"
+    vault_node_port: "31000"
 
 - name: Create the Vault namespace
-  command: kubectl create namespace vault --context kind-{{ inventory_hostname }}
+  command: kubectl create namespace vault
   ignore_errors: true  # Ignore error if namespace already exists    
 
 - name: Check if Vault pod is already running
-  command: kubectl --context kind-{{ inventory_hostname }} get pods vault-0 -n vault --no-headers
+  command: kubectl get pods vault-0 -n vault --no-headers
   register: vault_pod_status
   ignore_errors: true      
+
+- name: Add hashicorp Helm repository on 'auh' cluster
+  command: helm repo add hashicorp https://helm.releases.hashicorp.com
+  when: vault_pod_status_auh.rc != 0
+  environment:
+    KUBECONFIG: /tmp/kind-auh.kubeconfig
+
+- name: Update Helm repositories on 'auh' cluster
+  command: helm repo update
+  when: vault_pod_status_auh.rc != 0
+  environment:
+    KUBECONFIG: /tmp/kind-auh.kubeconfig
 
 - name: Install Vault using Helm (with dev mode and HA disabled, NodePort service)
   command: >
@@ -22,7 +38,7 @@
 
 - name: Wait for pod to be running
   shell: |
-    kubectl --context kind-{{ inventory_hostname }} get pods vault-0 -n vault -o jsonpath='{.status.phase}'
+    kubectl get pods vault-0 -n vault -o jsonpath='{.status.phase}'
   register: pod_status
   until: pod_status.stdout == "Running"
   retries: 30  # Maximum retries

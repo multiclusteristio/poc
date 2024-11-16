@@ -20,8 +20,6 @@ Vagrant.configure("2") do |config|
       ansible.playbook = "main.yml"
       ansible.extra_vars = { 
         "inventory_hostname" => "east",
-        "vault_root_token" => "root",
-        "vault_node_port" => "31000",
         "argo_node_port" => "32000",
         "istio_igw_http_port" => "30080",
         "istio_igw_https_port" => "30443",
@@ -38,9 +36,10 @@ Vagrant.configure("2") do |config|
 
 
     west.vm.network "forwarded_port", guest: 32000, host: 32001  
+    west.vm.network "forwarded_port", guest: 31000, host: 31001      
     west.vm.network "forwarded_port", guest: 30080, host: 31080     
     west.vm.network "forwarded_port", guest: 30443, host: 31443  
-    west.vm.network "forwarded_port", guest: 6443, host: 6443      
+        
 
     west.vm.provision "ansible_local" do |ansible|
       ansible.playbook = "main.yml"

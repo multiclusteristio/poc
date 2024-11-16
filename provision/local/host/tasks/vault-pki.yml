@@ -1,0 +1,39 @@
+- name: Set variables
+  set_fact:
+    common_name: "mydomain.com" 
+    issuing_certificates: "http://localhost:8200/v1/pki/ca"
+    crl_distribution_points: "http://localhost:8200/v1/pki/crl"
+    cert_role: "istio-ca"
+    vault_address: "http://localhost:8200"  # Vault server address       
+    vault_token: "root"           # Vault token          
+
+- name: Enable PKI secrets engine
+  shell: |
+    VAULT_ADDR={{ vault_address }} VAULT_TOKEN={{ vault_token }} \
+    vault secrets enable pki
+  ignore_errors: true   
+
+- name: Configure PKI secrets engine with CA certificate
+  shell: |
+    VAULT_ADDR={{ vault_address }} VAULT_TOKEN={{ vault_token }} \
+    vault write pki/root/generate/internal \
+    common_name="{{ common_name }}" \
+    ttl="8760h"
+
+- name: Configure PKI secrets engine to issue certificates
+  shell: |
+    VAULT_ADDR={{ vault_address }} VAULT_TOKEN={{ vault_token }} \
+    vault write pki/config/urls \
+    issuing_certificates="{{ issuing_certificates }}" \
+    crl_distribution_points="{{ crl_distribution_points }}"
+
+- name: Configure a role for certificate issuance
+  shell: |
+    VAULT_ADDR={{ vault_address }} VAULT_TOKEN={{ vault_token }} \
+    vault write pki/roles/{{ cert_role }} \
+    allowed_domains="istio-ca" \
+    allow_any_name=true \
+    enforce_hostnames=false \
+    require_cn=false \
+    allowed_uri_sans="spiffe://*" \
+    max_ttl="72h"

@@ -1,0 +1,25 @@
+- name: Check if Docker is installed
+  command: docker --version
+  register: docker_installed
+  ignore_errors: true
+
+- name: Install Docker if not installed
+  block:
+    - name: Install Docker using Homebrew
+      homebrew:
+        name: docker
+        state: present
+    - name: Start Docker service
+      command: open -a Docker
+    - name: Wait for Docker to start
+      wait_for:
+        port: 2375
+        delay: 5
+        timeout: 60
+  when: docker_installed.rc != 0  # Only run this block if Docker is not installed
+
+- name: Verify Docker installation
+  command: docker --version
+  register: docker_version
+  become: false
+  when: docker_installed.rc != 0  # Verify if Docker was installed successfully

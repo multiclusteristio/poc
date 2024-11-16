@@ -1,0 +1,38 @@
+- name: Set variables
+  set_fact:
+    desired_version: "v5.29.0"  # ArgoCD version to install
+    admin_password: "admin"     # Admin password for ArgoCD
+    
+- name: Check if ArgoCD is installed
+  shell: >
+    helm list -n argocd --kube-context "{{ cluster.kubecontext }}" --kubeconfig="{{ cluster.kubeconfig }}"
+  register: helm_installed
+  failed_when: false
+
+- name: Install ArgoCD if not installed
+  command: >
+    helm install argocd argo/argo-cd
+    --version "{{ desired_version }}"
+    --namespace argocd
+    --create-namespace
+    --set server.service.type=NodePort
+    --set server.service.nodePort="{{ cluster.argocdnodeport }}"
+    --kube-context "{{ cluster.kubecontext }}"
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  when: "'argocd' not in helm_installed.stdout"
+
+- name: Patch NodePort for ArgoCD server
+  shell: |
+    kubectl --context "{{ cluster.kubecontext }}" -n argocd patch svc argocd-server \
+    -p '{"spec": {"type": "NodePort", "ports": [{"port": 443, "targetPort": 8080, "nodePort": {{ cluster.argocdnodeport }} }]}}'
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+
+- name: Set ArgoCD admin password
+  shell: |
+    kubectl -n argocd get secret argocd-secret --kube-context "{{ cluster.kubecontext }}" --kubeconfig="{{ cluster.kubeconfig }}" || \
+    kubectl -n argocd patch secret argocd-secret \
+    -p "{\"data\": {\"admin.password\": \"{{ admin_password | b64encode }}\"}}"
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"    

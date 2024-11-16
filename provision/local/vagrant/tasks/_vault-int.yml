@@ -1,0 +1,85 @@
+- name: Set vault_command variable
+  set_fact:
+  
+    vault_command: "kubectl exec -n vault -it vault-0 -- vault"
+    root_pki_path: "pki_root"
+    certs_path: "./certs"
+    intermediate_pki_prefix: "pki_int"
+    remote_certs_path: "/tmp/certs"    
+
+- name: Create certs directory on remote VM
+  file:
+    path: "{{ remote_certs_path }}"
+    state: directory
+    mode: "0755"
+
+- name: Upload Root CA to remote VM
+  copy:
+    src: "{{ certs_path }}/CA_cert.crt"
+    dest: "{{ remote_certs_path }}/CA_cert.crt"
+    mode: "0644"
+
+- name: Enable Intermediate PKI engine for the cluster
+  command: >
+    {{ vault_command }} secrets enable -path={{ intermediate_pki_prefix }}_{{ inventory_hostname }} pki
+  ignore_errors: true
+
+- name: Set max lease TTL for Intermediate PKI
+  command: >
+    {{ vault_command }} secrets tune -max-lease-ttl=43800h {{ intermediate_pki_prefix }}_{{ inventory_hostname }}
+
+
+- name: Generate Intermediate CSR
+  shell: >
+    {{ vault_command }} write -format=json {{ intermediate_pki_prefix }}_{{ inventory_hostname }}/intermediate/generate/internal
+    common_name="mydomain.com intermediate {{ inventory_hostname }}"
+  register: intermediate_csr
+
+
+- name: Save the Intermediate CSR to file to localhost
+  copy:
+    content: "{{ (intermediate_csr.stdout | from_json).data.csr }}"
+    dest: "{{ certs_path }}/pki_intermediate_{{ inventory_hostname }}.csr"
+    mode: "0644"
+  delegate_to: localhost
+
+- name: Save the Intermediate CSR to file
+  copy:
+    content: "{{ (intermediate_csr.stdout | from_json).data.csr }}"
+    dest: "{{ remote_certs_path }}/pki_intermediate_{{ inventory_hostname }}.csr"
+    mode: "0644"
+
+
+- name: Sign the Intermediate CSR using Root CA
+  shell: >
+    {{ vault_command }} write -format=json {{ root_pki_path }}/root/sign-intermediate
+    csr=@{{ remote_certs_path }}/pki_intermediate_{{ inventory_hostname }}.csr
+    format=pem ttl="43800h"
+  register: signed_intermediate_cert
+
+
+- name: Save the signed Intermediate certificate
+  copy:
+    content: "{{ (signed_intermediate_cert.stdout | from_json).data.certificate }}"
+    dest: "{{ certs_path }}/intermediate_{{ inventory_hostname }}.cert.pem"
+    mode: "0644"
+  delegate_to: localhost
+
+- name: Save the signed Intermediate certificate to remote file
+  copy:
+    content: "{{ (signed_intermediate_cert.stdout | from_json).data.certificate }}"
+    dest: "{{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.cert.pem"
+    mode: "0644"
+
+
+- name: Combine Intermediate and Root Certificates on remote VM
+  shell: >
+    cat {{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.cert.pem {{ remote_certs_path }}/CA_cert.crt
+    > {{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem
+
+
+
+- name: Upload signed Intermediate certificate chain to Vault
+  shell: >
+    {{ vault_command }} write {{ intermediate_pki_prefix }}_{{ inventory_hostname }}/intermediate/set-signed
+    certificate=@{{ remote_certs_path }}/intermediate_{{ inventory_hostname }}.chain.pem

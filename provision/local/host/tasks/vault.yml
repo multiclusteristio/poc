@@ -1,0 +1,72 @@
+---
+- name: Define Vault version and root token
+  set_fact:
+    vault_version: "1.16.0"  # Change this to the desired version
+    vault_root_token: "root"
+
+- name: Define Vault download URL
+  set_fact:
+    vault_url: "https://releases.hashicorp.com/vault/{{ vault_version }}/vault_{{ vault_version }}_darwin_amd64.zip"
+
+- name: Check if Vault is installed
+  command: vault --version
+  register: vault_version_check
+  failed_when: false
+  changed_when: false
+
+- name: Install Vault if not installed or version mismatch
+  block:
+    - name: Download Vault binary
+      get_url:
+        url: "{{ vault_url }}"
+        dest: "/tmp/vault_{{ vault_version }}.zip"
+        mode: '0644'
+      when: "'Vault v{{ vault_version }}' not in vault_version_check.stdout"
+
+    - name: Unzip Vault binary
+      unarchive:
+        src: "/tmp/vault_{{ vault_version }}.zip"
+        dest: "/usr/local/bin/"
+        remote_src: yes
+      when: "'Vault v{{ vault_version }}' not in vault_version_check.stdout"
+
+    - name: Ensure Vault binary is executable
+      file:
+        path: "/usr/local/bin/vault"
+        mode: '0755'
+      when: "'Vault v{{ vault_version }}' not in vault_version_check.stdout"
+
+- name: Debug Vault version
+  debug:
+    var: vault_version_check.stdout
+
+- name: Start Vault in dev mode and keep it running
+  shell: |
+    nohup vault server -dev -dev-root-token-id="{{ vault_root_token }}" -log-level=trace > /tmp/vault.log 2>&1 &
+  environment:
+    VAULT_DEV_ROOT_TOKEN_ID: "{{ vault_root_token }}"
+
+
+# - name: Start Vault in dev mode
+#   command: |
+#     vault server -dev -dev-root-token-id="{{ vault_root_token }}"
+#   async: 60
+#   poll: 0
+#   register: vault_process
+#   environment:
+#     VAULT_DEV_ROOT_TOKEN_ID: "{{ vault_root_token }}"
+
+- name: Wait for Vault to be up and running
+  uri:
+    url: "http://127.0.0.1:8200/v1/sys/seal-status"
+    method: GET
+    return_content: yes
+    status_code: 200
+  register: vault_health_check
+  retries: 30
+  delay: 5
+  until: vault_health_check.status == 200
+
+- name: Print Vault process ID and root token
+  debug:
+    msg: "Vault root token is: {{ vault_root_token }}"

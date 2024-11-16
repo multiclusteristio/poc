@@ -1,0 +1,40 @@
+---
+- name: Set variables
+  set_fact:
+    desired_version: "v3.11.0"
+
+- name: Install specific version of Helm if not installed
+  
+  block:
+    - name: Check if Helm is installed
+      command: helm version --short
+      register: helm_check
+      ignore_errors: true
+
+    - name: Install Helm if not installed
+      block:
+        - name: Download Helm version
+          shell: |
+            curl -LO https://get.helm.sh/helm-{{ desired_version }}-darwin-amd64.tar.gz
+            tar -xzf helm-{{ desired_version }}-darwin-amd64.tar.gz
+            mv darwin-amd64/helm /usr/local/bin/helm
+            chmod +x /usr/local/bin/helm
+            rm -rf darwin-amd64 helm-{{ desired_version }}-darwin-amd64.tar.gz
+
+        - name: Verify Helm installation
+          command: helm version --short
+          register: helm_version
+      when: helm_check.failed
+
+- name: Print Helm version
+  command: helm version --short
+  register: helm_version
+  become: true
+
+- name: Display Helm version
+  debug:
+    var: helm_version.stdout
+
+
+  become: true
+

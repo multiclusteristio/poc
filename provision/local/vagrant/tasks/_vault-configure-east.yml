@@ -3,6 +3,7 @@
 - name: Set vault_command variable
   set_fact:
     vault_command: "kubectl exec -n vault -it vault-0 -- vault"
+    root_ca: "./east/root_ca.json"    
 
 - name: Enable PKI secrets engine
   command: "{{ vault_command }} secrets enable pki"
@@ -19,6 +20,19 @@
     {{ vault_command }} write pki/config/urls \ 
     issuing_certificates="http://vault.vault.svc.cluster.local:8200/v1/pki/ca" \
     crl_distribution_points="http://vault.vault.svc.cluster.local:8200/v1/pki/crl" 
+
+- name: Export Root CA from East Vault 
+  ansible.builtin.shell: |
+    {{ vault_command }} read -format=json pki/root/sign-self-issued common_name="mydomain.com" > {{ root_ca }}
+  register: export_root_ca_result
+  failed_when: export_root_ca_result.rc != 0
+  changed_when: false
+
+- name: Verify Root CA file was saved
+  ansible.builtin.stat:
+    path: "{{ root_ca }}"
+  register: root_ca_file
+  failed_when: not root_ca_file.stat.exists
 
 - name: Configure a role for certificate issuance
   shell: |

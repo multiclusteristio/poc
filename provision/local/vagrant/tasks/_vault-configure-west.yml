@@ -1,0 +1,112 @@
+
+
+- name: Set vault_command variable
+  set_fact:
+    vault_command: "kubectl exec -n vault -it vault-0 -- vault"
+    root_ca: "./east/root_ca.json" 
+       
+
+- name: Enable PKI secrets engine
+  command: "{{ vault_command }} secrets enable pki"
+  ignore_errors: true
+
+- name: Upload root certificate
+  ansible.builtin.shell: |
+    {{ vault_command }} write pki/config/ca pem_bundle=@{{ root_ca }}
+  ignore_errors: false  
+
+- name: Configure PKI secrets engine to issue certificates
+  shell: |
+    {{ vault_command }} write pki/config/urls \ 
+    issuing_certificates="http://vault.vault.svc.cluster.local:8200/v1/pki/ca" \
+    crl_distribution_points="http://vault.vault.svc.cluster.local:8200/v1/pki/crl" 
+
+- name: Configure a role for certificate issuance
+  shell: |
+      {{ vault_command }} write pki/roles/istio-ca \
+      allowed_domains=istio-ca \
+      allow_any_name=true  \
+      enforce_hostnames=false \
+      require_cn=false \
+      allowed_uri_sans="spiffe://*" \
+      max_ttl=72h
+
+- name: Create istio system ns
+  command: >
+    kubectl apply -f ./istio/istio-ns.yaml 
+  ignore_errors: true
+
+- name: Create istio cert issuer resources for vault access
+  command: >
+    kubectl apply -f ./istio/issuer-sa.yaml \
+    -f ./istio/issuer-sa-token.yaml \
+    -f ./istio/issuer-crb.yaml
+  ignore_errors: true            
+      
+- name: Enable Kubernetes auth method in Vault
+  shell: "{{ vault_command }} auth enable --path={{ inventory_hostname }} kubernetes"
+  ignore_errors: true      
+# - name: Get Kubernetes API server host from the cluster
+#   shell: |
+#     kubectl --context kind-{{ inventory_hostname }} config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.server}'
+#   register: k8s_host 
+
+- name: Get Kubernetes CA certificate from the cluster
+  shell: |
+    kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode
+  register: k8s_ca      
+
+- name: Get Service Account token for istio cert issuer
+  shell: |
+    kubectl get secret issuer-token-lmzpj -n istio-system -o jsonpath='{.data.token}' | base64 --decode
+  register: sa_token    
+
+- name: Configure Kubernetes auth method for east cluster
+  shell: |
+      {{ vault_command }} write auth/{{ inventory_hostname }}/config \
+      token_reviewer_jwt="{{ sa_token.stdout }}" \
+      kubernetes_host="https://kubernetes.default.svc" \
+      kubernetes_ca_cert="{{ k8s_ca.stdout }}" \
+      issuer="https://kubernetes.default.svc.cluster.local"      
+      
+- name: Create pki policy
+  shell: |
+    {{ vault_command }} policy write pki - <<EOF
+    path "pki*" {
+      capabilities = ["create", "read", "update", "delete", "list"]
+    }
+    EOF
+  ignore_errors: true    
+
+- name: Create Vault role for istio
+  shell: |
+      {{ vault_command }} write auth/{{ inventory_hostname }}/role/issuer \
+      bound_service_account_names=issuer \
+      bound_service_account_namespaces=istio-system \
+      policies=pki
+      ttl=1h    
+
+- name: Print sa_token
+  debug:
+    var: sa_token.stdout  
+- name: Print k8s_host
+  debug:
+    var: k8s_host.stdout 
+- name: Print k8s_ca
+  debug:
+    var: k8s_ca.stdout  
+
+
+- name: Export Root CA from East Vault 
+  ansible.builtin.shell: |
+    vault read -format=json pki/root/sign-self-issued common_name="example.com" > {{ root_ca_path }}
+  register: export_root_ca_result
+  failed_when: export_root_ca_result.rc != 0
+  changed_when: false
+
+- name: Verify Root CA file was saved
+  ansible.builtin.stat:
+    path: "./inventory_hostname/{{ root_ca_name }}"
+  register: root_ca_file
+  failed_when: not root_ca_file.stat.exists
+

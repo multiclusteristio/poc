@@ -1,0 +1,65 @@
+---
+
+- name: Set variables
+  set_fact:
+    desired_version: "v0.17.0"
+
+- name: Check if kind is installed
+  command: kind --version
+  register: kind_check
+  ignore_errors: true
+
+- name: Install specific version of kind if not installed
+  block:
+    - name: Download and install specific version of kind
+      shell: |
+        curl -Lo /usr/local/bin/kind https://github.com/kubernetes-sigs/kind/releases/download/{{ desired_version }}/kind-darwin-amd64
+        chmod +x /usr/local/bin/kind
+
+    - name: Verify kind installation
+      command: kind --version
+      register: kind_version
+  when: kind_check.failed
+  become: true
+
+- name: Create 'auh' cluster with kind
+  shell: kind create cluster --name auh
+  when: kind_check.rc == 0
+  ignore_errors: true
+  become: false
+
+- name: Create 'dxb' cluster with kind
+  shell: kind create cluster --name dxb
+  when: kind_check.rc == 0
+  ignore_errors: true
+  become: false
+
+- name: Get kubeconfig contexts for 'auh' cluster
+  command: kind get kubeconfig --name auh
+  register: auh_kubeconfig
+  ignore_errors: true
+  become: false
+
+- name: Get kubeconfig contexts for 'dxb' cluster
+  command: kind get kubeconfig --name dxb
+  register: dxb_kubeconfig
+  ignore_errors: true
+  become: false
+
+- name: Set kubectl context for 'auh' cluster
+  command: kubectl config use-context kind-auh
+  when: auh_kubeconfig.rc == 0
+  become: false
+
+- name: Set kubectl context for 'dxb' cluster
+  command: kubectl config use-context kind-dxb
+  when: dxb_kubeconfig.rc == 0
+  become: false
+
+- name: Export kubeconfig for auh cluster
+  shell: kind get kubeconfig --name auh > /tmp/kind-auh.kubeconfig
+  changed_when: false
+
+- name: Export kubeconfig for dxb cluster
+  shell: kind get kubeconfig --name dxb > /tmp/kind-dxb.kubeconfig
+  changed_when: false  

@@ -5,11 +5,11 @@ metadata:
   namespace: istio-system    
 spec:
   vault:
-    server: http://vault.vault.svc.cluster.local:8200
-    path: pki_int_east/sign/istio-ca
+    server: http://localhost:8200
+    path: pki/sign/istio-ca
     auth:
       kubernetes:
-        mountPath: /v1/auth/east
+        mountPath: /v1/auth/auh
         role: issuer
         secretRef:
           name: issuer-token-lmzpj
