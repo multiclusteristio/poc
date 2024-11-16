@@ -29,9 +29,16 @@
     vault auth enable --path={{ cluster.name }} kubernetes
   ignore_errors: true
 
+- name: Get Kubernetes API server host from the cluster
+  shell: |
+    kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.server}'
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"    
+  register: k8s_host  
+
 - name: Get Kubernetes CA certificate from the cluster
   shell: |
-    kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode
+    kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode    
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
   register: k8s_ca
@@ -48,7 +55,7 @@
     VAULT_ADDR={{ vault_address }} VAULT_TOKEN={{ vault_token }} \  
     vault write auth/{{ cluster.name }}/config \
       token_reviewer_jwt="{{ sa_token.stdout }}" \
-      kubernetes_host="https://kubernetes.default.svc" \
+      kubernetes_host="{{ k8s_host.stdout }}" \
       kubernetes_ca_cert="{{ k8s_ca.stdout }}" \
       issuer="https://kubernetes.default.svc.cluster.local"
 

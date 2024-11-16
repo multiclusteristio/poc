@@ -11,20 +11,19 @@
         kubeconfig: "/tmp/kind-dxb.kubeconfig"  
         kubecontext: "kind-dxb"
         argocdnodeport: 30002
-         
-
+                 
   tasks:  
-    # - name: Install Docker and Dependencies
-    #   include_tasks: tasks/docker.yml
+    - name: Install Docker and Dependencies
+      include_tasks: tasks/docker.yml
 
-    # - name: Install kubectl
-    #   include_tasks: tasks/kubectl.yml      
+    - name: Install kubectl
+      include_tasks: tasks/kubectl.yml      
 
-    # - name: Install kind
-    #   include_tasks: tasks/kind.yml   
+    - name: Install kind
+      include_tasks: tasks/kind.yml   
 
-    # - name: Install helm
-    #   include_tasks: tasks/helm.yml    
+    - name: Install helm
+      include_tasks: tasks/helm.yml    
 
     - name: Install vault
       include_tasks: tasks/vault.yml  
@@ -50,8 +49,14 @@
       loop_control:
         loop_var: cluster   
 
-    - name: Install cert manager
-      include_tasks: tasks/cert-manager.yml
+    - name: Install cert manager issuer
+      include_tasks: tasks/cert-manager-issuer.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster        
+
+    - name: Install cert-manager-istio-csr
+      include_tasks: tasks/cert-manager-istio-csr.yml
       loop: "{{ clusters }}"
       loop_control:
         loop_var: cluster          
