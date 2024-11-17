@@ -4,18 +4,29 @@
   vars:
 
     clusters:
+    
       - name: auh
         kubeconfig: "{{ ansible_env.HOME }}/.kube/kind-auh.kubeconfig"
         kubecontext: "kind-auh"
         argocd_nodeport: 30001
         istio_igw_http_port: 31080
         istio_igw_https_port: 31443
+        network: "auh-net"
+        node_labels:
+          topology.kubernetes.io/region: "uae"
+          topology.kubernetes.io/zone: "auh-zone"
+
+
       - name: dxb
         kubeconfig: "{{ ansible_env.HOME }}/.kube/kind-dxb.kubeconfig"  
         kubecontext: "kind-dxb"
         argocd_nodeport: 30002
         istio_igw_http_port: 32080        
         istio_igw_https_port: 32443
+        network: "dxb-net"
+        node_labels:
+          topology.kubernetes.io/region: "uae"
+          topology.kubernetes.io/zone: "dxb-zone"        
                        
   tasks:  
     - name: Install Docker and Dependencies
@@ -85,4 +96,16 @@
         loop_var: cluster   
 
     - name: Install istioctl 
-      include_tasks: tasks/istioctl.yml                                   
+      include_tasks: tasks/istioctl.yml
+
+    - name: Save remote sectrets 
+      include_tasks: tasks/remote-secret.yml  
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster   
+
+    - name: Ensure multi cluster configs
+      include_tasks: tasks/ensure.yml  
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster                                                    

@@ -1,0 +1,74 @@
+---
+- name: Check if Istio-system namespace has the correct network label for cluster {{ cluster.name }}
+  shell: kubectl --context {{ cluster.kubecontext }} get namespace istio-system -o jsonpath='{.metadata.labels.topology\.istio\.io/network}'
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  register: namespace_label_check
+  failed_when: false
+  changed_when: false
+
+- name: Label Istio-system namespace for cluster {{ cluster.name }}
+  shell: kubectl --context {{ cluster.kubecontext }} label namespace istio-system topology.istio.io/network={{ cluster.network }} --overwrite
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  when: namespace_label_check.stdout != cluster.network
+
+- name: Print Istio-system namespace label status for cluster {{ cluster.name }}
+  debug:
+    msg: |
+      Cluster {{ cluster.name }}:
+      - Current Label: {{ namespace_label_check.stdout }}
+      - Applied Label: {{ cluster.network }}
+
+- name: Verify cluster context is accessible for cluster {{ cluster.name }}
+  shell: kubectl config use-context {{ cluster.kubecontext }}
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  register: kubectl_context_check
+  failed_when: kubectl_context_check.rc != 0
+
+- name: Verify Istio installation in the cluster for cluster {{ cluster.name }}
+  shell: kubectl --context {{ cluster.kubecontext }} get pods -n istio-system
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  register: istio_check
+  failed_when: "'istiod' not in istio_check.stdout"
+  changed_when: false
+
+- name: Verify remote secret exists in the cluster for cluster {{ cluster.name }}
+  shell: kubectl --context {{ cluster.kubecontext }} get secret -n istio-system
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  register: remote_secret_check
+  failed_when: "'istio-remote-secret' not in remote_secret_check.stdout"
+  changed_when: false
+
+- name: Print cluster verification results for cluster {{ cluster.name }}
+  debug:
+    msg: |
+      Cluster {{ cluster.name }}:
+      - Context Accessible: {{ kubectl_context_check.rc == 0 }}
+      - Istio Installed: {{ 'istiod' in istio_check.stdout }}
+      - Network Label Correct: {{ namespace_label_check.stdout == cluster.network }}
+      - Remote Secret Exists: {{ 'istio-remote-secret' in remote_secret_check.stdout }}
+
+- name: Get nodes in the cluster for cluster {{ cluster.name }}
+  shell: kubectl --context {{ cluster.kubecontext }} get nodes -o name
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  register: node_list
+
+- name: Check and apply labels to Kind nodes for cluster {{ cluster.name }}
+  shell: |
+    kubectl --context {{ cluster.kubecontext }} label {{ node }} {{ label.key }}={{ label.value }} --overwrite
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  with_nested:
+    - "{{ node_list.stdout_lines }}"  # List of nodes from the cluster
+    - "{{ cluster.node_labels | dict2items }}"  # Node labels as key-value pairs
+  loop_control:
+    loop_var: item
+  vars:
+    node: "{{ item[0] }}"  # First item from the nested loop (node name)
+    label: "{{ item[1] }}"  # Second item from the nested loop (key-value pair)
+  when: node_list.stdout_lines is defined

@@ -49,7 +49,7 @@
   command: |
     helm install istiod istio/istiod --namespace istio-system \
     --set global.meshID={{ istio_mesh_name }} \
-    --set global.network={{ cluster.name }}-net \
+    --set global.network={{ cluster.network }} \
     --set global.multiCluster.enabled=true \
     --set global.multiCluster.clusterName={{ cluster.name }} \
     --set global.caAddress="cert-manager-istio-csr.cert-manager.svc:443" \
