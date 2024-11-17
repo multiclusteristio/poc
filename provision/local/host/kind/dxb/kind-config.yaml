@@ -4,14 +4,23 @@ apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
   - role: control-plane
     extraPortMappings:
-      - containerPort: 30002  # NodePort you want to expose
-        hostPort: 30002       # Host port to forward to
+      - containerPort: 30002 
+        hostPort: 30002      
         protocol: TCP
 
-      - containerPort: 31080  # NodePort you want to expose
-        hostPort: 31080       # Host port to forward to
+      - containerPort: 32080 
+        hostPort: 32080       
         protocol: TCP
 
-      - containerPort: 31443  # NodePort you want to expose
-        hostPort: 31443       # Host port to forward to
+      - containerPort: 32443  
+        hostPort: 32443      
         protocol: TCP
+
+    labels:
+      topology.kubernetes.io/region: uae
+      topology.kubernetes.io/zone: dxb-zone  
+
+  - role: worker
+    labels:
+      topology.kubernetes.io/region: uae
+      topology.kubernetes.io/zone: dxb-zone          

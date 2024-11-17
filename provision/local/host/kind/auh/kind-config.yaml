@@ -8,12 +8,21 @@ nodes:
         hostPort: 30001       # Host port to forward to
         protocol: TCP
 
-      - containerPort: 30080  # NodePort you want to expose
-        hostPort: 30080       # Host port to forward to
+      - containerPort: 31080 
+        hostPort: 31080     
         protocol: TCP
 
-      - containerPort: 30443  # NodePort you want to expose
-        hostPort: 30443       # Host port to forward to
+      - containerPort: 31443  
+        hostPort: 31443       
         protocol: TCP
+
+    labels:
+      topology.kubernetes.io/region: uae
+      topology.kubernetes.io/zone: auh-zone  
+
+  - role: worker
+    labels:
+      topology.kubernetes.io/region: uae
+      topology.kubernetes.io/zone: auh-zone          
 
 

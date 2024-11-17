@@ -5,7 +5,7 @@
     vault_address: "http://localhost:8200"  # Vault server address       
     vault_token: "root"           # Vault token        
      
-- name: Ensure Istio system namespace exists
+- name: Ensure Istio system namespace exists for cluster {{ cluster.name }}
   shell: |
     kubectl get namespace istio-system || kubectl create namespace istio-system
   environment:
@@ -14,7 +14,7 @@
   changed_when: "'created' in namespace_check.stdout or 'created' in namespace_check.stderr"
   ignore_errors: true
 
-- name: Create istio cert issuer resources for Vault access
+- name: Create istio cert issuer resources for Vault access for cluster {{ cluster.name }}
   command: >
     kubectl apply -f ./issuer/issuer-sa.yaml \
     -f ./issuer/issuer-sa-token.yaml \
@@ -23,34 +23,34 @@
     KUBECONFIG: "{{ cluster.kubeconfig }}"
   ignore_errors: true
 
-- name: Enable Kubernetes auth method in Vault
+- name: Enable Kubernetes auth method in Vault for cluster {{ cluster.name }}
   shell: |
     VAULT_ADDR={{ vault_address }} VAULT_TOKEN={{ vault_token }} \  
     vault auth enable --path={{ cluster.name }} kubernetes
   ignore_errors: true
 
-- name: Get Kubernetes API server host from the cluster
+- name: Get Kubernetes API server host from the cluster for cluster {{ cluster.name }}
   shell: |
     kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.server}'
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"    
   register: k8s_host  
 
-- name: Get Kubernetes CA certificate from the cluster
+- name: Get Kubernetes CA certificate from the cluster for cluster {{ cluster.name }}
   shell: |
     kubectl config view --raw --minify --flatten -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' | base64 --decode    
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
   register: k8s_ca
 
-- name: Get Service Account token for istio cert issuer
+- name: Get Service Account token for istio cert issuer for cluster {{ cluster.name }}
   shell: |
     kubectl get secret issuer-token-lmzpj -n istio-system -o jsonpath='{.data.token}' | base64 --decode
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
   register: sa_token
 
-- name: Configure Kubernetes auth method for cluster
+- name: Configure Kubernetes auth method for cluster for cluster {{ cluster.name }}
   shell: |
     VAULT_ADDR={{ vault_address }} VAULT_TOKEN={{ vault_token }} \  
     vault write auth/{{ cluster.name }}/config \
@@ -59,7 +59,7 @@
       kubernetes_ca_cert="{{ k8s_ca.stdout }}" \
       issuer="https://kubernetes.default.svc.cluster.local"
 
-- name: Create PKI policy
+- name: Create PKI policy for cluster {{ cluster.name }}
   shell: |
     VAULT_ADDR={{ vault_address }} VAULT_TOKEN={{ vault_token }} \  
     vault policy write pki - <<EOF
@@ -69,7 +69,7 @@
     EOF
   ignore_errors: true
 
-- name: Create Vault role for istio
+- name: Create Vault role for istio for cluster {{ cluster.name }}
   shell: |
     VAULT_ADDR={{ vault_address }} VAULT_TOKEN={{ vault_token }} \  
     vault write auth/{{ cluster.name }}/role/issuer \
@@ -78,10 +78,10 @@
       policies=pki \
       ttl=1h
 
-- name: Print Service Account token
+- name: Print Service Account token for cluster {{ cluster.name }}
   debug:
     msg: "Cluster: {{ cluster.name }}, SA Token: {{ sa_token.stdout }}"
 
-- name: Print Kubernetes CA Certificate
+- name: Print Kubernetes CA Certificate for cluster {{ cluster.name }}
   debug:
     msg: "Cluster: {{ cluster.name }}, Kubernetes CA: {{ k8s_ca.stdout }}"

@@ -16,7 +16,7 @@
     --namespace argocd
     --create-namespace
     --set server.service.type=NodePort
-    --set server.service.nodePort="{{ cluster.argocdnodeport }}"
+    --set server.service.nodePort="{{ cluster.argocd_nodeport }}"
     --set configs.secret.argocdServerAdminPassword="{{ admin_password }}" 
     --kube-context "{{ cluster.kubecontext }}"
   environment:
@@ -26,7 +26,7 @@
 - name: Patch NodePort for ArgoCD server
   shell: |
     kubectl --context "{{ cluster.kubecontext }}" -n argocd patch svc argocd-server \
-    -p '{"spec": {"type": "NodePort", "ports": [{"port": 443, "targetPort": 8080, "nodePort": {{ cluster.argocdnodeport }} }]}}'
+    -p '{"spec": {"type": "NodePort", "ports": [{"port": 443, "targetPort": 8080, "nodePort": {{ cluster.argocd_nodeport }} }]}}'
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 

@@ -4,7 +4,7 @@
     istio_version: "1.23.3"
     istio_mesh_name: "uaemesh"    
 
-- name: Add Istio Helm repository
+- name: Add Istio Helm repository for cluster {{ cluster.name }}
   command: helm repo add istio https://istio-release.storage.googleapis.com/charts
   register: istio_repo_add
   failed_when: istio_repo_add.rc != 0
@@ -12,7 +12,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Update Helm repositories
+- name: Update Helm repositories for cluster {{ cluster.name }}
   command: helm repo update
   register: helm_repo_update
   failed_when: helm_repo_update.rc != 0
@@ -20,7 +20,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Check if Istio base is already deployed
+- name: Check if Istio base is already deployed for cluster {{ cluster.name }}
   command: "helm status base -n istio-system"
   register: istio_base_status
   failed_when: istio_base_status.rc not in [0, 1]
@@ -28,7 +28,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Install Istio base if not installed
+- name: Install Istio base if not installed for cluster {{ cluster.name }}
   command: |
     helm install base istio/base --namespace istio-system \
     --version {{ istio_version }} \
@@ -37,7 +37,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Check if istiod is already deployed
+- name: Check if istiod is already deployed for cluster {{ cluster.name }}
   command: "helm status istiod -n istio-system"
   register: istiod_status
   failed_when: istiod_status.rc not in [0, 1]
@@ -45,7 +45,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Install Istiod if not installed
+- name: Install Istiod if not installed for cluster {{ cluster.name }}
   command: |
     helm install istiod istio/istiod --namespace istio-system \
     --set global.meshID={{ istio_mesh_name }} \
@@ -58,7 +58,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Wait for Istiod to be fully deployed
+- name: Wait for Istiod to be fully deployed for cluster {{ cluster.name }}
   command: kubectl -n istio-system wait --for=condition=Ready pod -l app=istiod --timeout=300s
   register: istiod_rollout_status
   retries: 30
@@ -68,7 +68,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Check if Istio ingress gateway is already deployed
+- name: Check if Istio ingress gateway is already deployed for cluster {{ cluster.name }}
   command: "helm status istio-ingressgateway -n istio-system"
   register: istio_gateway_status
   failed_when: istio_gateway_status.rc not in [0, 1]
@@ -76,7 +76,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Install Istio Ingress Gateway if not installed
+- name: Install Istio Ingress Gateway if not installed for cluster {{ cluster.name }}
   command: |
     helm install istio-ingressgateway istio/gateway --namespace istio-system \
     --version {{ istio_version }} \
@@ -93,7 +93,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Wait for Istio Ingress Gateway to be deployed
+- name: Wait for Istio Ingress Gateway to be deployed for cluster {{ cluster.name }}
   command: kubectl rollout status deployment/istio-ingressgateway -n istio-system
   register: istio_ingress_gateway_rollout_status
   retries: 30

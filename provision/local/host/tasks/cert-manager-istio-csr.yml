@@ -3,7 +3,7 @@
   set_fact:
     desired_version: "v0.12.0" 
 
-- name: Add Helm repository for cert-manager-istio-csr
+- name: Add Helm repository for cert-manager-istio-csr for cluster {{ cluster.name }}
   command:
     cmd: helm repo add jetstack https://charts.jetstack.io
   register: helm_repo_add
@@ -12,7 +12,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Update Helm repositories
+- name: Update Helm repositories for cluster {{ cluster.name }}
   command:
     cmd: helm repo update
   register: helm_repo_update
@@ -21,7 +21,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Check if cert-manager-istio-csr is already installed
+- name: Check if cert-manager-istio-csr is already installed for cluster {{ cluster.name }}
   command: "helm status cert-manager-istio-csr -n cert-manager"
   register: helm_release_check
   failed_when: helm_release_check.rc not in [0, 1]
@@ -29,7 +29,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Install cert-manager-istio-csr using Helm and wait for it to become healthy
+- name: Install cert-manager-istio-csr using Helm and wait for it to become healthy for cluster {{ cluster.name }}
   command: >
     helm install cert-manager-istio-csr jetstack/cert-manager-istio-csr --namespace cert-manager \
     --version {{ desired_version }} \
@@ -43,7 +43,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Ensure cert-manager-istio-csr is deployed and healthy
+- name: Ensure cert-manager-istio-csr is deployed and healthy for cluster {{ cluster.name }}
   command:
     cmd: helm status cert-manager-istio-csr --namespace cert-manager
   register: helm_status

@@ -7,18 +7,16 @@
       - name: auh
         kubeconfig: "{{ ansible_env.HOME }}/.kube/kind-auh.kubeconfig"
         kubecontext: "kind-auh"
-        argocdnodeport: 30001
-        istio_igw_http_port: 30080
-        istio_igw_https_port: 30443
+        argocd_nodeport: 30001
+        istio_igw_http_port: 31080
+        istio_igw_https_port: 31443
       - name: dxb
         kubeconfig: "{{ ansible_env.HOME }}/.kube/kind-dxb.kubeconfig"  
         kubecontext: "kind-dxb"
-        argocdnodeport: 30002
-        istio_igw_http_port: 31080        
-        istio_igw_https_port: 31443
-
-          
-                 
+        argocd_nodeport: 30002
+        istio_igw_http_port: 32080        
+        istio_igw_https_port: 32443
+                       
   tasks:  
     - name: Install Docker and Dependencies
       include_tasks: tasks/docker.yml
@@ -41,7 +39,7 @@
     - name: Install vault
       include_tasks: tasks/vault.yml  
 
-    - name: Enable vault PKI
+    - name: Enable vault PKI 
       include_tasks: tasks/vault-pki.yml         
 
     - name: Configure vault k8s auth for all clusters
@@ -56,32 +54,35 @@
       loop_control:
         loop_var: cluster   
 
-    - name: Install cert manager
+    - name: Install cert manager for all clusters
       include_tasks: tasks/cert-manager.yml
       loop: "{{ clusters }}"
       loop_control:
         loop_var: cluster   
 
-    - name: Install cert manager issuer
+    - name: Install cert manager issuer for all clusters
       include_tasks: tasks/cert-manager-issuer.yml
       loop: "{{ clusters }}"
       loop_control:
         loop_var: cluster        
 
-    - name: Install cert-manager-istio-csr
+    - name: Install cert-manager-istio-csr for all clusters
       include_tasks: tasks/cert-manager-istio-csr.yml
       loop: "{{ clusters }}"
       loop_control:
         loop_var: cluster   
 
-    - name: Install istio
+    - name: Install istio for all clusters
       include_tasks: tasks/istio.yml
       loop: "{{ clusters }}"
       loop_control:
         loop_var: cluster   
 
-    - name: Outputs
+    - name: Outputs for all clusters
       include_tasks: tasks/output.yml
       loop: "{{ clusters }}"
       loop_control:
-        loop_var: cluster                          
+        loop_var: cluster   
+
+    - name: Install istioctl 
+      include_tasks: tasks/istioctl.yml                                   

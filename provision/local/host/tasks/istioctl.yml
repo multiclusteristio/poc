@@ -1,0 +1,32 @@
+- name: Set variables
+  set_fact:    
+    istioctl_version: "1.18.0"
+
+- name: Check if istioctl is installed
+  stat:
+    path: /usr/local/bin/istioctl
+  register: istioctl_check
+
+- name: Download and install istioctl if not installed
+  block:
+    - name: Download istioctl binary for macOS
+      get_url:
+        url: "https://github.com/istio/istio/releases/download/{{ istioctl_version }}/istioctl-{{ istioctl_version }}-osx"
+        dest: "/tmp/istioctl"
+        mode: '0755'
+
+    - name: Move istioctl to /usr/local/bin
+      command: mv /tmp/istioctl /usr/local/bin/istioctl
+      args:
+        creates: /usr/local/bin/istioctl
+
+    - name: Ensure istioctl is executable
+      file:
+        path: /usr/local/bin/istioctl
+        mode: '0755'
+  when: not istioctl_check.stat.exists
+
+- name: Verify istioctl installation
+  command: /usr/local/bin/istioctl version --remote=false
+  register: istioctl_verify
+  changed_when: false

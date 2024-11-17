@@ -3,7 +3,7 @@
   set_fact:
     desired_version: "v1.16.0" 
 
-- name: Add Helm repository for cert-manager
+- name: Add Helm repository for cert-manager for cluster {{ cluster.name }}
   command:
     cmd: helm repo add jetstack https://charts.jetstack.io
   register: helm_repo_add
@@ -12,7 +12,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Update Helm repositories
+- name: Update Helm repositories for cluster {{ cluster.name }}
   command:
     cmd: helm repo update
   register: helm_repo_update
@@ -21,7 +21,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Check if cert-manager is already installed
+- name: Check if cert-manager is already installed for cluster {{ cluster.name }}
   command: "helm status cert-manager -n cert-manager"
   register: helm_release_check
   failed_when: helm_release_check.rc not in [0, 1]
@@ -29,7 +29,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Install cert-manager using Helm if not already installed
+- name: Install cert-manager using Helm if not already installed for cluster {{ cluster.name }}
   command: >
     helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace \
     --set crds.enabled=true \
@@ -44,7 +44,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Ensure cert-manager is deployed and healthy
+- name: Ensure cert-manager is deployed and healthy for cluster {{ cluster.name }}
   command:
     cmd: helm status cert-manager --namespace cert-manager
   register: helm_status

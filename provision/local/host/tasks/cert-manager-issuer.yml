@@ -1,5 +1,5 @@
 ---
-- name: Check if the Issuer resource exists in the istio-system namespace
+- name: Check if the Issuer resource exists in the istio-system namespace for cluster {{ cluster.name }}
   command: kubectl get issuer istio-ca -n istio-system
   register: issuer_check
   ignore_errors: true
@@ -12,7 +12,7 @@
   debug:
     var: issuer_check
 
-- name: Create Issuer resource if it doesn't exist
+- name: Create Issuer resource if it doesn't exist for cluster {{ cluster.name }}
   command: kubectl apply -f ./issuer/{{ cluster.name }}/vault-issuer.yaml
   when: issuer_check.rc != 0
   register: issuer_apply
@@ -21,7 +21,7 @@
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
 
-- name: Inform if the Issuer resource already exists
+- name: Inform if the Issuer resource already exists for cluster {{ cluster.name }}
   debug:
     msg: "Issuer resource 'istio-ca' already exists in the 'istio-system' namespace."
   when: issuer_check.rc == 0
