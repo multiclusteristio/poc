@@ -8,7 +8,7 @@ spec:
     istio: eastwestgateway
   servers:
     - port:
-        number: 15443
+        number: 32386
         name: tls
         protocol: TLS
       tls:
