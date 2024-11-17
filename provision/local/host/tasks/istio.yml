@@ -102,3 +102,39 @@
   changed_when: false
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
+
+- name: Check if Istio eastwestgateway is already deployed for cluster {{ cluster.name }}
+  command: "helm status istio-eastwestgateway -n istio-system"
+  register: istio_ewgateway_status
+  failed_when: istio_ewgateway_status.rc not in [0, 1]
+  changed_when: false
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+
+- name: Install Istio eastwestgateway if not installed for cluster {{ cluster.name }}
+  command: |
+    helm install istio-eastwestgateway istio/gateway --namespace istio-system \
+    --version {{ istio_version }} \
+    --set service.type=NodePort \
+    --set service.ports[0].name=http \
+    --set service.ports[0].port=80 \
+    --set service.ports[0].targetPort=8080 \
+    --set service.ports[0].nodePort={{ cluster.istio_ewg_http_port }} \
+    --set service.ports[1].name=https \
+    --set service.ports[1].port=443 \
+    --set service.ports[1].targetPort=8443 \
+    --set service.ports[1].nodePort={{ cluster.istio_ewg_https_port }} \
+    --set networkGateway={{ cluster.network }}
+  when: istio_ewgateway_status.rc == 1 and istiod_status.rc in [0, 1]
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"   
+
+- name: Wait for Istio eastwestgateway Gateway to be deployed for cluster {{ cluster.name }}
+  command: kubectl rollout status deployment/istio-eastwestgateway -n istio-system
+  register: istio_eastwestgateway_rollout_status
+  retries: 30
+  delay: 10
+  failed_when: istio_eastwestgateway_rollout_status.rc != 0
+  changed_when: false
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"     
