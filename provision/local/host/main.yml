@@ -29,83 +29,90 @@
           topology.kubernetes.io/zone: "dxb-zone"        
                        
   tasks:  
-    - name: Install Docker and Dependencies
-      include_tasks: tasks/docker.yml
+    # - name: Install Docker and Dependencies
+    #   include_tasks: tasks/docker.yml
 
-    - name: Install kubectl
-      include_tasks: tasks/kubectl.yml      
+    # - name: Install kubectl
+    #   include_tasks: tasks/kubectl.yml      
 
-    - name: Install kind
-      include_tasks: tasks/kind-install.yml   
+    # - name: Install kind
+    #   include_tasks: tasks/kind-install.yml   
 
-    - name: Create kind clusters
-      include_tasks: tasks/kind-clusters.yml
-      loop: "{{ clusters }}"
+    # - name: Create kind clusters
+    #   include_tasks: tasks/kind-clusters.yml
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster        
+
+    # - name: Install helm
+    #   include_tasks: tasks/helm.yml    
+
+    # - name: Install vault
+    #   include_tasks: tasks/vault.yml  
+
+    # - name: Enable vault PKI 
+    #   include_tasks: tasks/vault-pki.yml         
+
+    # - name: Configure vault k8s auth for all clusters
+    #   include_tasks: tasks/vault-auth.yml
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster      
+
+    # - name: Configure ArgoCD for all clusters
+    #   include_tasks: tasks/argo.yml
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster   
+
+    # - name: Install cert manager for all clusters
+    #   include_tasks: tasks/cert-manager.yml
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster   
+
+    # - name: Install cert manager issuer for all clusters
+    #   include_tasks: tasks/cert-manager-issuer.yml
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster        
+
+    # - name: Install cert-manager-istio-csr for all clusters
+    #   include_tasks: tasks/cert-manager-istio-csr.yml
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster   
+
+    # - name: Install istio for all clusters
+    #   include_tasks: tasks/istio.yml
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster   
+
+    # - name: Outputs for all clusters
+    #   include_tasks: tasks/output.yml
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster   
+
+    # - name: Install istioctl 
+    #   include_tasks: tasks/istioctl.yml
+
+    - name: Include remote secret creation tasks
+      include_tasks: tasks/remote-secret.yml
+      loop: >
+        {{ [
+          {"source_cluster": clusters[1], "target_cluster": clusters[0]},
+          {"source_cluster": clusters[0], "target_cluster": clusters[1]}
+        ] }}
       loop_control:
-        loop_var: cluster        
+        loop_var: cluster_pair
+      vars:
+        source_cluster: "{{ cluster_pair.source_cluster }}"
+        target_cluster: "{{ cluster_pair.target_cluster }}"
 
-    - name: Install helm
-      include_tasks: tasks/helm.yml    
-
-    - name: Install vault
-      include_tasks: tasks/vault.yml  
-
-    - name: Enable vault PKI 
-      include_tasks: tasks/vault-pki.yml         
-
-    - name: Configure vault k8s auth for all clusters
-      include_tasks: tasks/vault-auth.yml
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster      
-
-    - name: Configure ArgoCD for all clusters
-      include_tasks: tasks/argo.yml
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster   
-
-    - name: Install cert manager for all clusters
-      include_tasks: tasks/cert-manager.yml
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster   
-
-    - name: Install cert manager issuer for all clusters
-      include_tasks: tasks/cert-manager-issuer.yml
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster        
-
-    - name: Install cert-manager-istio-csr for all clusters
-      include_tasks: tasks/cert-manager-istio-csr.yml
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster   
-
-    - name: Install istio for all clusters
-      include_tasks: tasks/istio.yml
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster   
-
-    - name: Outputs for all clusters
-      include_tasks: tasks/output.yml
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster   
-
-    - name: Install istioctl 
-      include_tasks: tasks/istioctl.yml
-
-    - name: Save remote sectrets 
-      include_tasks: tasks/remote-secret.yml  
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster   
-
-    - name: Ensure multi cluster configs
-      include_tasks: tasks/ensure.yml  
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster                                                    
+    # - name: Ensure multi cluster configs
+    #   include_tasks: tasks/ensure.yml  
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster                                                    
