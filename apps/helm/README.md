@@ -14,28 +14,33 @@ kubectl exec -n istio-system $(kubectl get pods -n istio-system -l istio=ingress
 
 
 <!-- accounts -->
-istioctl proxy-config clusters $(kubectl get pods -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}') -n accounts -o json
-istioctl proxy-config routes $(kubectl get pods -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}') -n accounts -o json
-istioctl proxy-config endoints $(kubectl get pods -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}') -n accounts -o json
+istioctl pc endpoints svc/accounts-ms-base -n accounts 
+istioctl pc clusters svc/accounts-ms-base -n accounts 
+istioctl pc listeners svc/accounts-ms-base -n accounts 
 istioctl x describe pod $(kubectl get pod -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}').accounts
-kubectl logs $(kubectl get pod -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}') -n accounts -c istio-proxy
 
 
 <!-- limits -->
 
-istioctl proxy-config routes $(kubectl get pods -n limits -l app.kubernetes.io/instance=limits -o jsonpath='{.items[0].metadata.name}') -n limits -o json
-istioctl x describe pod $(kubectl get pod -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}').accounts
-kubectl logs $(kubectl get pod -n accounts -l app.kubernetes.io/instance=accounts -o jsonpath='{.items[0].metadata.name}') -n accounts -c istio-proxy
+istioctl pc endpoints svc/limits-ms-base -n limits 
+istioctl pc clusters svc/limits-ms-base -n limits 
+istioctl pc listeners svc/limits-ms-base -n limits 
+istioctl x describe pod $(kubectl get pod -n limits -l app.kubernetes.io/instance=limits -o jsonpath='{.items[0].metadata.name}').limits
 
 
 <!-- transfers -->
 
-istioctl proxy-config routes $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
-istioctl proxy-config endpoints $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
+istioctl pc endpoints svc/transfers-ms-base -n transfers 
+istioctl pc clusters svc/transfers-ms-base -n transfers 
+istioctl pc listeners svc/transfers-ms-base -n transfers 
+istioctl x describe pod $(kubectl get pod -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}').transfers
+
+
+<!-- istioctl proxy-config endpoints $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
 istioctl proxy-config clusters $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
 istioctl proxy-config listeners $(kubectl get pods -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -o json
 istioctl x describe pod $(kubectl get pod -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}').transfers
-kubectl logs $(kubectl get pod -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -c istio-proxy
+kubectl logs $(kubectl get pod -n transfers -l app.kubernetes.io/instance=transfers -o jsonpath='{.items[0].metadata.name}') -n transfers -c istio-proxy -->
 
 
 
