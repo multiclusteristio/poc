@@ -13,7 +13,10 @@ kubectl exec -n istio-system $(kubectl get pods -n istio-system -l istio=ingress
 
 
 
+
+
 <!-- accounts -->
+istioctl pc endpoints deploy/istio-ingressgateway.istio-system --cluster 'outbound|80||accounts-ms-base.accounts.svc.cluster.local' -o json
 istioctl pc endpoints svc/accounts-ms-base -n accounts 
 istioctl pc clusters svc/accounts-ms-base -n accounts 
 istioctl pc listeners svc/accounts-ms-base -n accounts 
@@ -29,7 +32,7 @@ istioctl x describe pod $(kubectl get pod -n limits -l app.kubernetes.io/instanc
 
 
 <!-- transfers -->
-
+istioctl pc endpoints deploy/istio-ingressgateway.istio-system --cluster 'outbound|80||transfers-ms-base.transfers.svc.cluster.local' -o json
 istioctl pc endpoints svc/transfers-ms-base -n transfers 
 istioctl pc clusters svc/transfers-ms-base -n transfers 
 istioctl pc listeners svc/transfers-ms-base -n transfers 
