@@ -18,12 +18,12 @@ metadata:
   labels:
     istio-injection: enabled        
 
----
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: limits 
-  annotations:
-    argocd.argoproj.io/sync-wave: "0"
-  labels:
-    istio-injection: enabled      
+# ---
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: limits 
+#   annotations:
+#     argocd.argoproj.io/sync-wave: "0"
+#   labels:
+#     istio-injection: enabled      
