@@ -1,1 +1,1 @@
-sh build_and_push.sh transfer v7
+sh build_and_push.sh transfer v8
