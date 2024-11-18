@@ -1,20 +1,20 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: ServiceEntry
 metadata:
-  name: eastwestgateway
+  name: accounts-ms-base-global
   namespace: istio-system
 spec:
   hosts:
-  - "*.global"
+  - accounts-ms-base.accounts.global
   addresses:
   - 172.18.0.2
   ports:
-  - number: 15443
-    name: tls
-    protocol: TLS
+  - number: 80
+    name: http
+    protocol: HTTP
   resolution: STATIC
   location: MESH_EXTERNAL
   endpoints:
-  - address: 172.18.0.2
+  - address: 172.18.0.2 # Remote East-West Gateway
     ports:
-      tls: 30823 
+      http: 30823
