@@ -3,7 +3,7 @@ clusterName: sh2-cluster
 global:
   image:
     repository: kadirzade/mci-transfer
-    tag: v11
+    tag: v12
     pullPolicy: Always
 
   service:
@@ -46,9 +46,9 @@ global:
   env: 
     values:
       - name: ACCOUNTS_URL
-        value: http://accounts-ms-base.accounts/api/v1  
+        value: http://accounts-ms-base.accounts/api/v2  
       - name: LIMITS_URL
-        value: http://limits-ms-base.limits/api/v1 
+        value: http://limits-ms-base.limits/api/v2 
       - name: REGION
         value: DXB                   
 
