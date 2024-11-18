@@ -2,20 +2,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: limits
+  name: transfers
   namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://github.com/multiclusteristio/poc.git
     targetRevision: HEAD
-    path: apps/helm/limits.api
+    path: apps/helm/transfers.api
     helm:
       valueFiles: 
         - values-dxb.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: limits 
+    namespace: transfers 
   syncPolicy:
     automated:
       prune: true

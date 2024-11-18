@@ -12,7 +12,7 @@ spec:
     path: apps/helm/limits.api
     helm:
       valueFiles: 
-        - values-dxb.yaml
+        - values-auh.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: limits 
