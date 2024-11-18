@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using Quantic.Core;
 using Quantic.Web;
 using Transfers.API.Commands;
+using Transfers.API.Model;
+using Transfers.API.Query;
 
 namespace Transfers.API.Controllers
 {
@@ -14,10 +16,22 @@ namespace Transfers.API.Controllers
     public class TransfersController : BaseController
     {
         private readonly ICommandHandler<DoTransfer> doTransferHandler;
+        private readonly IQueryHandler<GetAccountByNumber, Account> getAccountByNumberHandler;
+        private readonly IQueryHandler<GetCustomerByCif, Customer> getCustomerByCifHandler;
+        private readonly IQueryHandler<GetCustomerLimit, Limit> getCustomerLimitHandler;
 
-        public TransfersController(ICommandHandler<DoTransfer> doTransferHandler)
+        private readonly Config config;
+
+        public TransfersController(ICommandHandler<DoTransfer> doTransferHandler,
+            IQueryHandler<GetAccountByNumber, Account> getAccountByNumberHandler,
+            IQueryHandler<GetCustomerLimit, Limit> getCustomerLimitHandler,
+            Config config)
         {
             this.doTransferHandler = doTransferHandler;
+            this.getAccountByNumberHandler = getAccountByNumberHandler;
+            this.getCustomerByCifHandler = getCustomerByCifHandler;
+            this.getCustomerLimitHandler = getCustomerLimitHandler;
+            this.config = config;
         }
 
         [HttpPost("transfers")]
@@ -26,10 +40,42 @@ namespace Transfers.API.Controllers
         [ProducesResponseType(typeof(Error[]), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(Error[]), StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(typeof(Error[]), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetAccount([FromBody] DoTransferRequest request)
+        public async Task<IActionResult> DoTransfer([FromBody] DoTransferRequest request)
         {
             var doTransfer = await doTransferHandler.Handle(new DoTransfer(request.Sender, request.Receiver, request.Amount, request.Currency), Context);
             return doTransfer.Ok();
+        }
+
+        [HttpPost("locality-transfer")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [Produces(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(typeof(Error[]), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(Error[]), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(Error[]), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DoTransferV2([FromBody] DoTransferRequest request)
+        {
+            var getAccount = await getAccountByNumberHandler.Handle(new GetAccountByNumber(request.Sender), Context);
+            if (getAccount.HasError)
+                return Unauthorized();
+
+            var fromAccount = getAccount.Result;
+
+            getAccount = await getAccountByNumberHandler.Handle(new GetAccountByNumber(request.Receiver), Context);
+            if (getAccount.HasError)
+                return Unauthorized();
+
+            var toAccount = getAccount.Result;
+
+            var getLimit = await getCustomerLimitHandler.Handle(new GetCustomerLimit("1234"), Context);
+            if (getLimit.HasError)
+                return Unauthorized();
+
+            return Ok(new
+            {
+                LimitRegion = getLimit.Result.Region,
+                AccountRegion = getAccount.Result.Region,
+                TransferRegion = config.Region
+            });
         }
     }
 }

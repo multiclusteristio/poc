@@ -7,5 +7,6 @@ namespace Transfers.API.Model
         public double MonthlyLimit { get; set; }
         public double DailyUsedLimit { get; set; }
         public double MonthlyUsedLimit { get; set; }
+        public string Region { get; set; }         
     }
 }
