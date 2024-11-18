@@ -1,20 +1,20 @@
-apiVersion: networking.istio.io/v1alpha3
-kind: ServiceEntry
-metadata:
-  name: accounts-ms-base-global
-  namespace: istio-system
-spec:
-  hosts:
-  - accounts-ms-base.accounts.global
-  addresses:
-  - 172.18.0.2
-  ports:
-  - number: 80
-    name: http
-    protocol: HTTP
-  resolution: STATIC
-  location: MESH_EXTERNAL
-  endpoints:
-  - address: 172.18.0.2 # Remote East-West Gateway
-    ports:
-      http: 30823
+# apiVersion: networking.istio.io/v1alpha3
+# kind: ServiceEntry
+# metadata:
+#   name: accounts-ms-base-global
+#   namespace: istio-system
+# spec:
+#   hosts:
+#   - accounts-ms-base.accounts.global
+#   addresses:
+#   - 172.18.0.2
+#   ports:
+#   - number: 80
+#     name: http
+#     protocol: HTTP
+#   resolution: STATIC
+#   location: MESH_EXTERNAL
+#   endpoints:
+#   - address: 172.18.0.2 # Remote East-West Gateway
+#     ports:
+#       http: 30823
