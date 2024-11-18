@@ -19,7 +19,6 @@ namespace Transfers.API.Controllers
         private readonly IQueryHandler<GetAccountByNumber, Account> getAccountByNumberHandler;
         private readonly IQueryHandler<GetCustomerByCif, Customer> getCustomerByCifHandler;
         private readonly IQueryHandler<GetCustomerLimit, Limit> getCustomerLimitHandler;
-
         private readonly Config config;
 
         public TransfersController(ICommandHandler<DoTransfer> doTransferHandler,
@@ -74,7 +73,7 @@ namespace Transfers.API.Controllers
             {
                 LimitRegion = getLimit.Result.Region,
                 AccountRegion = getAccount.Result.Region,
-                TransferRegion = config.Region
+                TransferRegion = "REG"
             });
         }
     }

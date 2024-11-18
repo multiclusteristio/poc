@@ -1,1 +1,1 @@
-sh build_and_push.sh transfer v2
+sh build_and_push.sh transfer v3
