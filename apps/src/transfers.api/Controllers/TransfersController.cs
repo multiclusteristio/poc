@@ -51,19 +51,10 @@ namespace Transfers.API.Controllers
         [ProducesResponseType(typeof(Error[]), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DoTransferV2([FromBody] DoTransferRequest request)
         {
-            var getAccount = await getAccountByNumberHandler.Handle(new GetAccountByNumber(request.Sender), Context);
+            var getAccount = await getAccountByNumberHandler.Handle(new GetAccountByNumber("1432"), Context);
 
             if (getAccount.HasError)
                 return Unauthorized();
-
-            var fromAccount = getAccount.Result;
-
-            getAccount = await getAccountByNumberHandler.Handle(new GetAccountByNumber(request.Receiver), Context);
-
-            if (getAccount.HasError)
-                return Unauthorized();
-
-            var toAccount = getAccount.Result;
 
             var getLimit = await getCustomerLimitHandler.Handle(new GetCustomerLimit("1234"), Context);
 
@@ -72,7 +63,7 @@ namespace Transfers.API.Controllers
 
             return Ok(new
             {
-                LimitRegion = getLimit.Result.Region,
+                LimitRegion = "AUH",
                 AccountRegion = "AUH",
                 TransferRegion = "AUH"
             });
