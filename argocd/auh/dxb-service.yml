@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: eastwestgateway
+  namespace: istio-system
+spec:
+  hosts:
+  - "*.global"
+  addresses:
+  - 172.18.0.5
+  ports:
+  - number: 15443
+    name: tls
+    protocol: TLS
+  resolution: STATIC
+  location: MESH_EXTERNAL
+  endpoints:
+  - address: 172.18.0.5
+    ports:
+      tls: 30823 # Example: 30053
