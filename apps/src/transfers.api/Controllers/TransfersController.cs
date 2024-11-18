@@ -63,9 +63,9 @@ namespace Transfers.API.Controllers
 
             return Ok(new
             {
-                LimitRegion = "AUH",
-                AccountRegion = getAccount.Result.Region,
-                TransferRegion = "AUH"
+                LimitRegion = getLimit.Result,
+                AccountRegion = getAccount.Result,
+                Config = config
             });
         }
     }
