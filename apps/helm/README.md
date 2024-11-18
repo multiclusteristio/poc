@@ -54,3 +54,10 @@ istioctl proxy-config routes $(kubectl get pods -n istio-system -l istio=ingress
 
 
 kubectl exec -n istio-system $(kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}') -- curl -i -s  http://accounts-ms-base.accounts.svc.cluster.local/api/v1/accounts
+
+
+<!-- change log level -->
+
+istioctl proxy-config log $( kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}' ) -n istio-system --level debug
+ 
+
