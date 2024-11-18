@@ -21,7 +21,7 @@ namespace Transfers.API.Controllers
             _config = config;
         }
 
-        [HttpGet("local-transfer")]
+        [HttpPost("local-transfer")]
         public async Task<IActionResult> GetCombinedData()
         {
             // Define service endpoints
@@ -45,7 +45,7 @@ namespace Transfers.API.Controllers
                 {
                     Limits = limitsResponse,
                     Accounts = accountsResponse,
-                    Config = _config
+                    TransferRegion = _config.Region
                 };
 
                 // Return combined result

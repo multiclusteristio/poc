@@ -1,1 +1,1 @@
-sh build_and_push.sh transfer v23
+sh build_and_push.sh transfer v25
