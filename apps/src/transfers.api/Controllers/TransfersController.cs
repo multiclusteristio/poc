@@ -63,8 +63,8 @@ namespace Transfers.API.Controllers
 
             return Ok(new
             {
-                LimitRegion = getLimit.Result,
-                AccountRegion = getAccount.Result,
+                LimitRegion = getAccount,
+                AccountRegion = getLimit,
                 Config = config
             });
         }
