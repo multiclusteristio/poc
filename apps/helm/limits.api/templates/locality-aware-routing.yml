@@ -5,7 +5,7 @@ metadata:
   name: limits-dest-rule2
   namespace: limits
 spec:
-  host: limits-ms-base.limits
+  host: limits-ms-base.limits.svc.cluster.local
   trafficPolicy:
     connectionPool:
       http:
