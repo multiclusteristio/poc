@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System;
 using System.Text.Json.Serialization;
+using Transfers.API.Model;
 
 namespace Transfers.API.Controllers
 {
@@ -12,10 +13,12 @@ namespace Transfers.API.Controllers
     public class TransfersControllerV2 : ControllerBase
     {
         private readonly HttpClient _httpClient;
+        private readonly Config _config;
 
-        public TransfersControllerV2(IHttpClientFactory httpClientFactory)
+        public TransfersControllerV2(IHttpClientFactory httpClientFactory, Config config)
         {
             _httpClient = httpClientFactory.CreateClient();
+            _config = config;
         }
 
         [HttpGet("local-transfer")]
@@ -41,7 +44,8 @@ namespace Transfers.API.Controllers
                 var combinedResult = new
                 {
                     Limits = limitsResponse,
-                    Accounts = accountsResponse
+                    Accounts = accountsResponse,
+                    Config = _config
                 };
 
                 // Return combined result
