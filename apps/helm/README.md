@@ -47,7 +47,7 @@ kubectl logs $(kubectl get pod -n transfers -l app.kubernetes.io/instance=transf
 
 
 
-istioctl proxy-config routes $(kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}') -n istio-system -o json
+istioctl proxy-config endpoints $(kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}') -n istio-system -o json
 
 
 
