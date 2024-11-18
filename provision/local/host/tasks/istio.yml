@@ -116,15 +116,6 @@
   command: |
     helm install istio-eastwestgateway istio/gateway --namespace istio-system \
     --version {{ istio_version }} \
-    --set service.type=NodePort \
-    --set service.ports[0].name=http \
-    --set service.ports[0].port=80 \
-    --set service.ports[0].targetPort=8080 \
-    --set service.ports[0].nodePort={{ cluster.istio_ewg_http_port }} \
-    --set service.ports[1].name=https \
-    --set service.ports[1].port=443 \
-    --set service.ports[1].targetPort=8443 \
-    --set service.ports[1].nodePort={{ cluster.istio_ewg_https_port }} \
     --set networkGateway={{ cluster.network }} \
     --set labels.istio=eastwestgateway
   when: istio_ewgateway_status.rc == 1 and istiod_status.rc in [0, 1]
