@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using Accounts.API.Model;
 
 namespace Accounts.API
 {
@@ -31,7 +32,14 @@ namespace Accounts.API
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Accounts.API", Version = "v1" });
-            });           
+            }); 
+
+            var config = new Config
+            {
+                Region =   Configuration.GetValue<string>("REGION")             
+            };  
+
+            services.AddSingleton(config);                        
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

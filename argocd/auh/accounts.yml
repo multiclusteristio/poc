@@ -12,7 +12,7 @@ spec:
     path: apps/helm/accounts.api
     helm:
       valueFiles: 
-        - values.yaml
+        - values-auh.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: accounts 

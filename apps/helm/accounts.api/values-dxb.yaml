@@ -3,7 +3,7 @@ clusterName: sh2-cluster
 global:
   image:
     repository: kadirzade/mci-account
-    tag: v2.5
+    tag: v3
     pullPolicy: Always
 
   service:
@@ -43,20 +43,8 @@ global:
     # If not set and create is true, a name is generated using the fullname template
     name: ""
     
-  env: {}
-  # probes:
-  #   liveness:
-  #     path: /hc/live
-  #     initialDelaySeconds: 10
-  #     periodSeconds: 30
-  #     port: 80
-  #   readiness:
-  #     path: /hc/ready
-  #     timeoutSeconds: 5
-  #     initialDelaySeconds: 30
-  #     periodSeconds: 10
-  #     failureThreshold: 4
-  #     successThreshold: 1
-  #     port: 80     
-
+  env: 
+    values:
+      - name: REGION
+        value: DXB
       
