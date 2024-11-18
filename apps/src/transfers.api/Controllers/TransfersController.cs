@@ -17,7 +17,6 @@ namespace Transfers.API.Controllers
     {
         private readonly ICommandHandler<DoTransfer> doTransferHandler;
         private readonly IQueryHandler<GetAccountByNumber, Account> getAccountByNumberHandler;
-        private readonly IQueryHandler<GetCustomerByCif, Customer> getCustomerByCifHandler;
         private readonly IQueryHandler<GetCustomerLimit, Limit> getCustomerLimitHandler;
         private readonly Config config;
 
@@ -28,7 +27,6 @@ namespace Transfers.API.Controllers
         {
             this.doTransferHandler = doTransferHandler;
             this.getAccountByNumberHandler = getAccountByNumberHandler;
-            this.getCustomerByCifHandler = getCustomerByCifHandler;
             this.getCustomerLimitHandler = getCustomerLimitHandler;
             this.config = config;
         }
@@ -54,26 +52,29 @@ namespace Transfers.API.Controllers
         public async Task<IActionResult> DoTransferV2([FromBody] DoTransferRequest request)
         {
             var getAccount = await getAccountByNumberHandler.Handle(new GetAccountByNumber(request.Sender), Context);
+
             if (getAccount.HasError)
                 return Unauthorized();
 
             var fromAccount = getAccount.Result;
 
             getAccount = await getAccountByNumberHandler.Handle(new GetAccountByNumber(request.Receiver), Context);
+
             if (getAccount.HasError)
                 return Unauthorized();
 
             var toAccount = getAccount.Result;
 
             var getLimit = await getCustomerLimitHandler.Handle(new GetCustomerLimit("1234"), Context);
+
             if (getLimit.HasError)
                 return Unauthorized();
 
             return Ok(new
             {
                 LimitRegion = getLimit.Result.Region,
-                AccountRegion = getAccount.Result.Region,
-                TransferRegion = "REG"
+                AccountRegion = "AUH",
+                TransferRegion = "AUH"
             });
         }
     }
