@@ -4,6 +4,7 @@ using System.Net.Mime;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Limits.API.Model;
 
 namespace Limits.API.Controllers
 {
@@ -12,6 +13,14 @@ namespace Limits.API.Controllers
     [ApiController]
     public class LimitsController : ControllerBase
     {
+
+        private readonly Config config;
+
+        public LimitsController(Config config)
+        {
+            this.config = config;
+        }
+ 
         [HttpGet("limits")]
         [Consumes(MediaTypeNames.Application.Json)]
         [Produces(MediaTypeNames.Application.Json)]
@@ -21,18 +30,12 @@ namespace Limits.API.Controllers
         [ProducesResponseType(typeof(Error[]), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetLimit([FromQuery] string cif)
         {
-            // var headers = Request.Headers.ToDictionary(k => k.Key, v => v.Value.First());
-
-            // if (headers.Any())
-            // {
-            //     throw new Exception(string.Join(",", headers.Select(x => x.Value)));
-            // }
-
             return Ok(new
             {
                 DailyLimit = 100,
                 MonthlyLimit = 1000,
-                WeeklyLimit = 5000
+                WeeklyLimit = 5000,
+                Region = config.Region
             });
         }
 

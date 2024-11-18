@@ -68,7 +68,8 @@ namespace Transfers.API
             {
                 AccountsApiUrl = Configuration.GetValue<string>("ACCOUNTS_URL"),
                 CustomersApiUrl = Configuration.GetValue<string>("CUSTOMERS_URL"),
-                LimitsApiUrl =   Configuration.GetValue<string>("LIMITS_URL")            
+                LimitsApiUrl =   Configuration.GetValue<string>("LIMITS_URL"),
+                Region =   Configuration.GetValue<string>("REGION")             
             };  
 
             services.AddSingleton(config);                          
