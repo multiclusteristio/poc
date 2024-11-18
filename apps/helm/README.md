@@ -61,5 +61,19 @@ kubectl exec -n istio-system $(kubectl get pods -n istio-system -l istio=ingress
 istioctl proxy-config log $( kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}' ) -n istio-system --level debug
 
 istioctl proxy-config log $( kubectl get pods -n istio-system -l app=istiod -o jsonpath='{.items[0].metadata.name}' ) -n istio-system --level debug
+
+
+
+
+
+
+
+----------------
+
+
+istioctl pc endpoints deploy/istio-ingressgateway.istio-system \
+    --cluster \
+    'outbound|80||accounts-ms-base.accounts.svc.cluster.local' \
+    -o json
  
 
