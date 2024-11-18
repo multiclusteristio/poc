@@ -47,4 +47,8 @@ global:
     values:
       - name: REGION
         value: AUH
+
+      - name: Logging__LogLevel__Default
+        value: Debug        
+        
       
