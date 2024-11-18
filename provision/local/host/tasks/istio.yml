@@ -89,6 +89,7 @@
     --set service.ports[1].port=443 \
     --set service.ports[1].targetPort=8443 \
     --set service.ports[1].nodePort={{ cluster.istio_igw_https_port }}
+    --set labels.istio=ingressgateway
   when: istio_gateway_status.rc == 1 and istiod_status.rc in [0, 1]
   environment:
     KUBECONFIG: "{{ cluster.kubeconfig }}"
@@ -124,10 +125,11 @@
     --set service.ports[1].port=443 \
     --set service.ports[1].targetPort=8443 \
     --set service.ports[1].nodePort={{ cluster.istio_ewg_https_port }} \
-    --set networkGateway={{ cluster.network }}
+    --set networkGateway={{ cluster.network }} \
+    --set labels.istio=eastwestgateway
   when: istio_ewgateway_status.rc == 1 and istiod_status.rc in [0, 1]
   environment:
-    KUBECONFIG: "{{ cluster.kubeconfig }}"   
+    KUBECONFIG: "{{ cluster.kubeconfig }}"    
 
 - name: Wait for Istio eastwestgateway Gateway to be deployed for cluster {{ cluster.name }}
   command: kubectl rollout status deployment/istio-eastwestgateway -n istio-system

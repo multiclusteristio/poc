@@ -1,6 +1,7 @@
 - name: Set variables
   set_fact:    
     istio_version: "1.23.3"
+    istioctl_path: "/usr/local/bin/istioctl"
 
 - name: Check if istioctl is installed
   command: istioctl version --remote=false
@@ -8,14 +9,28 @@
   ignore_errors: true  # Allow the task to fail without interrupting the playbook
   changed_when: false
 
-- name: Download and install istioctl with version
-  shell: |
-    curl -sL https://istio.io/downloadIstioctl | ISTIO_VERSION={{ istio_version }} sh -
-  args:
-    creates: "{{ ansible_env.HOME }}/.istioctl/bin/istioctl"
-  when: istioctl_check.failed
+- name: Istioctl installation
+  block:
 
-- name: Verify istioctl installation
-  command: istioctl version --remote=false
-  register: istioctl_verify
-  changed_when: false
+    - name: Download and install istioctl with version
+      shell: |
+        curl -sL https://istio.io/downloadIstioctl | ISTIO_VERSION={{ istio_version }} sh -
+      args:
+        creates: "{{ ansible_env.HOME }}/.istioctl/bin/istioctl"
+
+    - name: Move istioctl to /usr/local/bin
+      command: "mv {{ ansible_env.HOME }}/.istioctl/bin/istioctl {{ istioctl_path }}"
+      become: true
+
+    - name: Ensure istioctl is executable
+      file:
+        path: "{{ istioctl_path }}"
+        mode: '0755'
+      become: true
+
+    - name: Verify istioctl installation
+      command: istioctl version --remote=false
+      register: istioctl_verify
+      changed_when: false
+
+  when: istioctl_check.failed

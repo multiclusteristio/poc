@@ -1,0 +1,10 @@
+- name: Install Cloud Provider KIND
+  ansible.builtin.shell: |
+    export PATH=$PATH:/usr/local/go/bin
+    go install sigs.k8s.io/cloud-provider-kind@latest
+  environment:
+    GOPATH: "{{ lookup('env', 'HOME') }}/go"
+  args:
+    executable: /bin/zsh
+  changed_when: false
+

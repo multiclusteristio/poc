@@ -40,7 +40,7 @@
       include_tasks: tasks/kubectl.yml      
 
     - name: Install kind
-      include_tasks: tasks/kind-install.yml   
+      include_tasks: tasks/kind-install.yml       
 
     - name: Create kind clusters
       include_tasks: tasks/kind-clusters.yml
@@ -93,11 +93,11 @@
       loop_control:
         loop_var: cluster   
 
-    # - name: Outputs for all clusters
-    #   include_tasks: tasks/output.yml
-    #   loop: "{{ clusters }}"
-    #   loop_control:
-    #     loop_var: cluster   
+    - name: Outputs for all clusters
+      include_tasks: tasks/output.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster   
 
     - name: Install istioctl 
       include_tasks: tasks/istioctl.yml
@@ -115,8 +115,8 @@
         source_cluster: "{{ cluster_pair.source_cluster }}"
         target_cluster: "{{ cluster_pair.target_cluster }}"
 
-    - name: Ensure multi cluster configs
-      include_tasks: tasks/ensure.yml  
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster                                                    
+    # - name: Ensure multi cluster configs
+    #   include_tasks: tasks/ensure.yml  
+    #   loop: "{{ clusters }}"
+    #   loop_control:
+    #     loop_var: cluster                                                    

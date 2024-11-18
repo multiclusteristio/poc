@@ -23,3 +23,23 @@
   register: docker_version
   become: false
   when: docker_installed.rc != 0  # Verify if Docker was installed successfully
+
+- name: Check if Docker is running on macOS
+  shell: pgrep -xq Docker
+  register: docker_status
+  failed_when: docker_status.rc not in [0, 1]  # 0 = running, 1 = not running
+  changed_when: false
+
+- name: Start Docker Desktop if not running
+  shell: open -a Docker
+  async: 1
+  poll: 0
+  when: docker_status.rc == 1  # Docker is not running
+
+- name: Wait for Docker to be ready
+  retries: 10
+  delay: 10
+  command: docker info
+  register: docker_ready
+  until: docker_ready.rc == 0
+
