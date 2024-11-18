@@ -1,22 +1,22 @@
-# # app1.yaml (example for app1 Helm chart)
-# apiVersion: argoproj.io/v1alpha1
-# kind: Application
-# metadata:
-#   name: accounts
-#   namespace: argocd
-# spec:
-#   project: default
-#   source:
-#     repoURL: https://github.com/multiclusteristio/poc.git
-#     targetRevision: HEAD
-#     path: apps/helm/accounts.api
-#     helm:
-#       valueFiles: 
-#         - values.yaml
-#   destination:
-#     server: https://kubernetes.default.svc
-#     namespace: accounts 
-#   syncPolicy:
-#     automated:
-#       prune: true
-#       selfHeal: true
+# app1.yaml (example for app1 Helm chart)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: accounts
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/multiclusteristio/poc.git
+    targetRevision: HEAD
+    path: apps/helm/accounts.api
+    helm:
+      valueFiles: 
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: accounts 
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
