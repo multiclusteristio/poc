@@ -3,7 +3,7 @@ clusterName: sh2-cluster
 global:
   image:
     repository: kadirzade/mci-transfer
-    tag: v14
+    tag: v15
     pullPolicy: Always
 
   service:

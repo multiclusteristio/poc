@@ -7,7 +7,7 @@ using System;
 namespace Transfers.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v{v:apiVersion}")]
     public class TransfersControllerV2 : ControllerBase
     {
         private readonly HttpClient _httpClient;
