@@ -46,8 +46,8 @@ global:
   env: 
     values:
       - name: ACCOUNTS_URL
-        value: http://accounts-ms-base.accounts.svc.cluster.local/api/v1  
+        value: http://accounts-ms-base.accounts/api/v1  
       - name: LIMITS_URL
-        value: http://limits-ms-base.limits.svc.cluster.local/api/v1            
+        value: http://limits-ms-base.limits/api/v1            
 
       
