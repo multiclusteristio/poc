@@ -7,7 +7,7 @@ spec:
   hosts:
   - "*.global"
   addresses:
-  - 172.18.0.5
+  - 172.18.0.2
   ports:
   - number: 15443
     name: tls
@@ -15,6 +15,6 @@ spec:
   resolution: STATIC
   location: MESH_EXTERNAL
   endpoints:
-  - address: 172.18.0.5
+  - address: 172.18.0.2
     ports:
-      tls: 30823 # Example: 30053
+      tls: 30823 
