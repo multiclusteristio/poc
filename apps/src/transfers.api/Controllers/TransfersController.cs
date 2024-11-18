@@ -42,31 +42,5 @@ namespace Transfers.API.Controllers
             var doTransfer = await doTransferHandler.Handle(new DoTransfer(request.Sender, request.Receiver, request.Amount, request.Currency), Context);
             return doTransfer.Ok();
         }
-
-        [HttpPost("locality-transfer")]
-        [Consumes(MediaTypeNames.Application.Json)]
-        [Produces(MediaTypeNames.Application.Json)]
-        [ProducesResponseType(typeof(Error[]), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(Error[]), StatusCodes.Status401Unauthorized)]
-        [ProducesResponseType(typeof(Error[]), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> DoTransferV2([FromBody] DoTransferRequest request)
-        {
-            var getAccount = await getAccountByNumberHandler.Handle(new GetAccountByNumber("1432"), Context);
-
-            if (getAccount.HasError)
-                return Unauthorized();
-
-            var getLimit = await getCustomerLimitHandler.Handle(new GetCustomerLimit("1234"), Context);
-
-            if (getLimit.HasError)
-                return Unauthorized();
-
-            return Ok(new
-            {
-                LimitRegion = getAccount,
-                AccountRegion = getLimit,
-                Config = config
-            });
-        }
     }
 }
