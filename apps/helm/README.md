@@ -59,5 +59,7 @@ kubectl exec -n istio-system $(kubectl get pods -n istio-system -l istio=ingress
 <!-- change log level -->
 
 istioctl proxy-config log $( kubectl get pods -n istio-system -l istio=ingressgateway -o jsonpath='{.items[0].metadata.name}' ) -n istio-system --level debug
+
+istioctl proxy-config log $( kubectl get pods -n istio-system -l app=istiod -o jsonpath='{.items[0].metadata.name}' ) -n istio-system --level debug
  
 
