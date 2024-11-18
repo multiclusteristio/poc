@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System;
+using System.Text.Json.Serialization;
 
 namespace Transfers.API.Controllers
 {
@@ -57,21 +58,39 @@ namespace Transfers.API.Controllers
         }
 
         // Classes to map the JSON responses
-        private class LimitsResponse
+        public class LimitsResponse
         {
+            [JsonPropertyName("dailyLimit")]
             public int DailyLimit { get; set; }
+
+            [JsonPropertyName("monthlyLimit")]
             public int MonthlyLimit { get; set; }
+
+            [JsonPropertyName("weeklyLimit")]
             public int WeeklyLimit { get; set; }
+
+            [JsonPropertyName("region")]
             public string Region { get; set; }
         }
 
-        private class AccountsResponse
+        public class AccountsResponse
         {
+            [JsonPropertyName("accountNumber")]
             public string AccountNumber { get; set; }
+
+            [JsonPropertyName("accountType")]
             public string AccountType { get; set; }
+
+            [JsonPropertyName("cif")]
             public string Cif { get; set; }
-            public double Balance { get; set; }
+
+            [JsonPropertyName("balance")]
+            public decimal Balance { get; set; }
+
+            [JsonPropertyName("branchCode")]
             public string BranchCode { get; set; }
+
+            [JsonPropertyName("region")]
             public string Region { get; set; }
         }
     }
