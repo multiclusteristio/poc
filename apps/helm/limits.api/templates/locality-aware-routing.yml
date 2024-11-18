@@ -3,7 +3,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
   name: limits-dest-rule
-  namespace: accounts
+  namespace: limits
 spec:
   host: limits-ms-base.limits.svc.cluster.local
   trafficPolicy:
