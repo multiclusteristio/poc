@@ -10,3 +10,8 @@ spec:
         app.kubernetes.io/name: ms-base
   mtls:
     mode: STRICT
+
+# mtls:
+#     mode: PERMISSIVE    
+
+# The PERMISSIVE mutual authentication does just that, as it permits workloads to accept both encrypted and clear-text requests.
