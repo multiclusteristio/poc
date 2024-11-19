@@ -10,9 +10,7 @@
         kubecontext: "kind-auh"
         argocd_nodeport: 30001
         istio_igw_http_port: 31080
-        istio_igw_https_port: 31443
-        istio_ewg_http_port: 33080
-        istio_ewg_https_port: 33443        
+        istio_igw_https_port: 31443       
         network: "auh-net"
         node_labels:
           topology.kubernetes.io/region: "uae"
@@ -24,9 +22,7 @@
         kubecontext: "kind-dxb"
         argocd_nodeport: 30002
         istio_igw_http_port: 32080        
-        istio_igw_https_port: 32443
-        istio_ewg_http_port: 34080
-        istio_ewg_https_port: 34443            
+        istio_igw_https_port: 32443          
         network: "dxb-net"
         node_labels:
           topology.kubernetes.io/region: "uae"
@@ -93,12 +89,6 @@
       loop_control:
         loop_var: cluster   
 
-    - name: Outputs for all clusters
-      include_tasks: tasks/output.yml
-      loop: "{{ clusters }}"
-      loop_control:
-        loop_var: cluster   
-
     - name: Install istioctl 
       include_tasks: tasks/istioctl.yml
 
@@ -115,8 +105,17 @@
         source_cluster: "{{ cluster_pair.source_cluster }}"
         target_cluster: "{{ cluster_pair.target_cluster }}"
 
-    # - name: Ensure multi cluster configs
-    #   include_tasks: tasks/ensure.yml  
-    #   loop: "{{ clusters }}"
-    #   loop_control:
-    #     loop_var: cluster                                                    
+    - name: Create root apps
+      include_tasks: tasks/root-apps.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster     
+
+    - name: Outputs for all clusters
+      include_tasks: tasks/output.yml
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster               
+
+    - name: Ensure multi cluster configs
+      include_tasks: tasks/ensure.yml                                             

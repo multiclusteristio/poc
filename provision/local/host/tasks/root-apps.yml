@@ -1,0 +1,41 @@
+---
+- name: Set variables
+  set_fact:
+    repo_URL: "https://github.com/multiclusteristio/poc.git"
+
+- name: Check if ArgoCD application exists {{ cluster.name }}
+  shell: kubectl --context="{{ cluster.kubecontext }}" get application "{{ cluster.name }}-root" -n argocd
+  args:
+    executable: /bin/bash
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  register: app_check
+  failed_when: app_check.rc != 0 and "NotFound" not in app_check.stderr
+
+- name: Create ArgoCD application if not present for {{ cluster.name }}
+  shell: |
+    kubectl --context="{{ cluster.kubecontext }}" apply -f - <<EOF
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: "{{ cluster.name }}-root"
+      namespace: argocd
+    spec:
+      project: default
+      source:
+        repoURL: "{{ repo_URL }}"
+        targetRevision: main
+        path: "argocd/{{ cluster.name }}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: argocd
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+    EOF
+  args:
+    executable: /bin/bash
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+  when: app_check.rc != 0
