@@ -2,7 +2,7 @@ apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
   name: testvm
-  namespace: default
+  namespace: payment
 spec:
   running: true  # Set to true so the VM starts automatically
   template:
