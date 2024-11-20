@@ -1,21 +1,21 @@
-# app1.yaml (example for app1 Helm chart)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: limits
+  name: kubevirt
   namespace: argocd
 spec:
   project: default
   source:
-    repoURL: https://github.com/multiclusteristio/poc.git
-    targetRevision: HEAD
-    path: apps/helm/limits.api
+    repoURL: https://kubevirt.github.io/kubevirt-helm/ 
+    chart: kubevirt
+    targetRevision: v1.0.0 
     helm:
-      valueFiles: 
-        - values-dxb.yaml
+      parameters:
+        - name: kubevirt
+          value: kubevirt
   destination:
     server: https://kubernetes.default.svc
-    namespace: limits 
+    namespace: kubevirt
   syncPolicy:
     automated:
       prune: true

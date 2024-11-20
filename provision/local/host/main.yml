@@ -118,4 +118,8 @@
         loop_var: cluster               
 
     - name: Ensure multi cluster configs
-      include_tasks: tasks/ensure.yml                                             
+      include_tasks: tasks/ensure.yml  
+
+    - name: Install kubevirt for AUH cluster
+      include_tasks: tasks/kubevirt.yml
+      when: cluster.name == "auh"

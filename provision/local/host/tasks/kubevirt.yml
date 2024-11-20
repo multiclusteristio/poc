@@ -1,0 +1,38 @@
+- name: Set variables
+  set_fact:
+    kubevirt_namespace: "kubevirt"
+    kubevirt_operator_yaml: "https://github.com/kubevirt/kubevirt/releases/latest/download/kubevirt-operator.yaml"
+    kubevirt_cr_yaml: "https://github.com/kubevirt/kubevirt/releases/latest/download/kubevirt-cr.yaml"
+
+- name: Ensure kubevirt namespace exists with Istio injection enabled
+  shell: |
+    kubectl create namespace {{ kubevirt_namespace }} || true
+    kubectl label namespace {{ kubevirt_namespace }} istio-injection=enabled --overwrite
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+
+- name: Check if KubeVirt is installed
+  command: kubectl get kubevirt.kubevirt.io
+  register: kubevirt_check
+  ignore_errors: true
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+
+- name: Install KubeVirt operator if not installed
+  shell: |
+    kubectl apply -f {{ kubevirt_operator_yaml }}
+  when: kubevirt_check.rc != 0
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+
+- name: Install KubeVirt custom resource if not installed
+  shell: |
+    kubectl apply -f {{ kubevirt_cr_yaml }}
+  when: kubevirt_check.rc != 0
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
+
+- name: Wait for KubeVirt to become available
+  command: kubectl wait --for=condition=Available deployment --all -n {{ kubevirt_namespace }} --timeout=300s
+  environment:
+    KUBECONFIG: "{{ cluster.kubeconfig }}"
