@@ -1,0 +1,53 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: testvm
+spec:
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: testvm
+    spec:
+      domain:
+        resources:
+          requests:
+            memory: 128Mi  # Increased for more robust operation
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus:
+                  virtio
+          interfaces:
+            - name: testSlirp
+              slirp: {}
+              ports:
+                - name: http
+                  port: 8080  # Listening on port 8080 for the web server
+        machine:
+          type: ""
+      networks:
+        - name: testSlirp
+          pod: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: kubevirt/cirros-container-disk-demo
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userData: |
+              #cloud-config
+              users:
+                - name: cirros
+                  passwd: gocubsgo
+              runcmd:
+                - echo '#!/bin/sh' > /webserver.sh
+                - echo 'while true; do' >> /webserver.sh
+                - echo '  (echo -e "HTTP/1.0 200 OK\r\n"; echo "Hello from testvm!") | nc -l -p 8080' >> /webserver.sh
+                - echo 'done' >> /webserver.sh
+                - chmod +x /webserver.sh
+                - nohup /webserver.sh > /var/log/webserver.log 2>&1 &
