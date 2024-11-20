@@ -123,3 +123,6 @@
     - name: Install kubevirt for AUH cluster
       include_tasks: tasks/kubevirt.yml
       when: cluster.name == "auh"
+      loop: "{{ clusters }}"
+      loop_control:
+        loop_var: cluster
