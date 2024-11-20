@@ -11,7 +11,17 @@ spec:
       http:
         http2MaxRequests: 10
         maxRequestsPerConnection: 10
+
+      loadBalancer:
+        simple: ROUND_ROBIN
+        localityLbSetting:
+          enabled: true
+          failover:
+            - from: uae/auh-zone
+              to: uae/dxb-zone
+
     outlierDetection:
       consecutive5xxErrors: 1
       interval: 20s
       baseEjectionTime: 30s
+
