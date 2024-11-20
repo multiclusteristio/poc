@@ -2,9 +2,9 @@ apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
   name: testvm
-  namespace: kubevirt
+  namespace: default
 spec:
-  running: false
+  running: true  # Set to true so the VM starts automatically
   template:
     metadata:
       labels:
@@ -22,14 +22,6 @@ spec:
             - name: cloudinitdisk
               disk:
                 bus: virtio
-          interfaces:
-            - name: default
-              masquerade: {}  # Use masquerade networking instead of Slirp
-        machine:
-          type: ""
-      networks:
-        - name: default
-          pod: {}
       volumes:
         - name: containerdisk
           containerDisk:
@@ -41,10 +33,3 @@ spec:
               users:
                 - name: cirros
                   passwd: gocubsgo
-              runcmd:
-                - echo '#!/bin/sh' > /webserver.sh
-                - echo 'while true; do' >> /webserver.sh
-                - echo '  (echo -e "HTTP/1.0 200 OK\r\n"; echo "Hello from testvm!") | nc -l -p 8080' >> /webserver.sh
-                - echo 'done' >> /webserver.sh
-                - chmod +x /webserver.sh
-                - nohup /webserver.sh > /var/log/webserver.log 2>&1 &
