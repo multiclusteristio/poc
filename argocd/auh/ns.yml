@@ -4,5 +4,5 @@ metadata:
   name: payment 
   annotations:
     argocd.argoproj.io/sync-wave: "0"
-  labels:
-    istio-injection: enabled      
+  # labels:
+  #   istio-injection: enabled      
