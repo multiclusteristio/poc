@@ -19,6 +19,8 @@ spec:
         failover:
           - from: auh-zone
             to: dxb-zone
+          - from: dxb-zone
+            to: auh-zone            
 
     outlierDetection:
       consecutive5xxErrors: 1
