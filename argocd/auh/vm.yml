@@ -12,7 +12,7 @@ spec:
       domain:
         resources:
           requests:
-            memory: 128Mi  # Increased for more robust operation
+            memory: 128Mi
         devices:
           disks:
             - name: containerdisk
@@ -20,18 +20,14 @@ spec:
                 bus: virtio
             - name: cloudinitdisk
               disk:
-                bus:
-                  virtio
+                bus: virtio
           interfaces:
-            - name: testSlirp
-              slirp: {}
-              ports:
-                - name: http
-                  port: 8080  # Listening on port 8080 for the web server
+            - name: default
+              masquerade: {}  # Use masquerade networking instead of Slirp
         machine:
           type: ""
       networks:
-        - name: testSlirp
+        - name: default
           pod: {}
       volumes:
         - name: containerdisk
